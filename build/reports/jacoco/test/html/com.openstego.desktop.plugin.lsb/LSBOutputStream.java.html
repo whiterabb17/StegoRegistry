@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBOutputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBOutputStream.java</span></div><h1>LSBOutputStream.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoConfig;
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.util.ImageHolder;
+import com.openstego.desktop.util.LabelUtil;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.OutputStream;
+
+/**
+ * OutputStream to embed data into image
+ */
+public class LSBOutputStream extends OutputStream {
+    /**
+     * LabelUtil instance to retrieve labels
+     */
+<span class="nc" id="L25">    private static final LabelUtil labelUtil = LabelUtil.getInstance(LSBPlugin.NAMESPACE);</span>
+
+    /**
+     * Output Image data
+     */
+    private final ImageHolder image;
+
+    /**
+     * Number of bits used per color channel
+     */
+    private int channelBitsUsed;
+
+    /**
+     * Length of the data
+     */
+    private final int dataLength;
+
+    /**
+     * Name of the source data file
+     */
+    private final String fileName;
+
+    /**
+     * Current x co-ordinate
+     */
+<span class="nc" id="L50">    private int x = 0;</span>
+
+    /**
+     * Current y co-ordinate
+     */
+<span class="nc" id="L55">    private int y = 0;</span>
+
+    /**
+     * Current bit number to be read
+     */
+<span class="nc" id="L60">    private int currBit = 0;</span>
+
+    /**
+     * Bit set to store three bits per pixel
+     */
+    private byte[] bitSet;
+
+    /**
+     * Width of the image
+     */
+    private final int imgWidth;
+
+    /**
+     * Height of the image
+     */
+    private final int imgHeight;
+
+    /**
+     * Configuration data
+     */
+    private final OpenStegoConfig config;
+
+    /**
+     * Default constructor
+     *
+     * @param image      Source image into which data will be embedded
+     * @param dataLength Length of the data that would be written to the image
+     * @param fileName   Name of the source data file
+     * @param config     Configuration data to use while writing
+     * @throws OpenStegoException Processing issues
+     */
+<span class="nc" id="L91">    public LSBOutputStream(ImageHolder image, int dataLength, String fileName, OpenStegoConfig config) throws OpenStegoException {</span>
+<span class="nc bnc" id="L92" title="All 4 branches missed.">        if (image == null || image.getImage() == null) {</span>
+<span class="nc" id="L93">            throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.NULL_IMAGE_ARGUMENT);</span>
+        }
+
+<span class="nc" id="L96">        this.dataLength = dataLength;</span>
+<span class="nc" id="L97">        this.imgWidth = image.getImage().getWidth();</span>
+<span class="nc" id="L98">        this.imgHeight = image.getImage().getHeight();</span>
+<span class="nc" id="L99">        this.config = config;</span>
+<span class="nc" id="L100">        BufferedImage newImg = new BufferedImage(this.imgWidth, this.imgHeight, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L101">        this.image = new ImageHolder(newImg, image.getMetadata());</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (int x = 0; x &lt; this.imgWidth; x++) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            for (int y = 0; y &lt; this.imgHeight; y++) {</span>
+<span class="nc" id="L104">                newImg.setRGB(x, y, image.getImage().getRGB(x, y));</span>
+            }
+        }
+
+<span class="nc" id="L108">        this.channelBitsUsed = 1;</span>
+<span class="nc" id="L109">        this.fileName = fileName;</span>
+<span class="nc" id="L110">        this.bitSet = new byte[3];</span>
+<span class="nc" id="L111">        writeHeader();</span>
+<span class="nc" id="L112">    }</span>
+
+    /**
+     * Method to write header data to stream
+     *
+     * @throws OpenStegoException Processing issues
+     */
+    private void writeHeader() throws OpenStegoException {
+<span class="nc" id="L120">        int channelBits = 1;</span>
+        int noOfPixels;
+        int headerSize;
+        LSBDataHeader header;
+
+        try {
+<span class="nc" id="L126">            noOfPixels = this.imgWidth * this.imgHeight;</span>
+<span class="nc" id="L127">            header = new LSBDataHeader(this.dataLength, channelBits, this.fileName, this.config);</span>
+<span class="nc" id="L128">            headerSize = header.getHeaderSize();</span>
+
+            while (true) {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                if ((noOfPixels * 3 * channelBits) / 8.0 &lt; (headerSize + this.dataLength)) {</span>
+<span class="nc" id="L132">                    channelBits++;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                    if (channelBits &gt; ((LSBConfig) this.config).getMaxBitsUsedPerChannel()) {</span>
+<span class="nc" id="L134">                        throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.IMAGE_SIZE_INSUFFICIENT);</span>
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            // Update channelBitsUsed in the header, and write to image
+<span class="nc" id="L142">            header.setChannelBitsUsed(channelBits);</span>
+<span class="nc" id="L143">            write(header.getHeaderData());</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (this.currBit != 0) {</span>
+<span class="nc" id="L146">                this.currBit = 0;</span>
+<span class="nc" id="L147">                writeCurrentBitSet();</span>
+<span class="nc" id="L148">                nextPixel();</span>
+            }
+
+<span class="nc" id="L151">            this.channelBitsUsed = channelBits;</span>
+<span class="nc" id="L152">            this.bitSet = new byte[3 * channelBits];</span>
+<span class="nc" id="L153">        } catch (OpenStegoException osEx) {</span>
+<span class="nc" id="L154">            throw osEx;</span>
+<span class="nc" id="L155">        } catch (Exception ex) {</span>
+<span class="nc" id="L156">            throw new OpenStegoException(ex);</span>
+<span class="nc" id="L157">        }</span>
+<span class="nc" id="L158">    }</span>
+
+    /**
+     * Implementation of &lt;code&gt;OutputStream.write(int)&lt;/code&gt; method
+     *
+     * @param data Byte to be written
+     * @throws IOException Write issues
+     */
+    @Override
+    public void write(int data) throws IOException {
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        for (int bit = 0; bit &lt; 8; bit++) {</span>
+<span class="nc" id="L169">            this.bitSet[this.currBit] = (byte) ((data &gt;&gt; (7 - bit)) &amp; 1);</span>
+<span class="nc" id="L170">            this.currBit++;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (this.currBit == this.bitSet.length) {</span>
+<span class="nc" id="L172">                this.currBit = 0;</span>
+<span class="nc" id="L173">                writeCurrentBitSet();</span>
+<span class="nc" id="L174">                nextPixel();</span>
+            }
+        }
+<span class="nc" id="L177">    }</span>
+
+    /**
+     * Flushes the stream
+     *
+     * @throws IOException Write issues
+     */
+    @Override
+    public void flush() throws IOException {
+<span class="nc" id="L186">        writeCurrentBitSet();</span>
+<span class="nc" id="L187">    }</span>
+
+    /**
+     * Closes the stream
+     *
+     * @throws IOException Write issues
+     */
+    @Override
+    public void close() throws IOException {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (this.currBit != 0) {</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            for (int i = this.currBit; i &lt; this.bitSet.length; i++) {</span>
+<span class="nc" id="L198">                this.bitSet[i] = 0;</span>
+            }
+<span class="nc" id="L200">            this.currBit = 0;</span>
+<span class="nc" id="L201">            writeCurrentBitSet();</span>
+<span class="nc" id="L202">            nextPixel();</span>
+        }
+<span class="nc" id="L204">        super.close();</span>
+<span class="nc" id="L205">    }</span>
+
+    /**
+     * Get the image containing the embedded data. Ideally, this should be called after the stream is closed.
+     *
+     * @return Image data
+     * @throws OpenStegoException Processing issues
+     */
+    public ImageHolder getImage() throws OpenStegoException {
+        try {
+<span class="nc" id="L215">            flush();</span>
+<span class="nc" id="L216">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L217">            throw new OpenStegoException(ioEx);</span>
+<span class="nc" id="L218">        }</span>
+<span class="nc" id="L219">        return this.image;</span>
+    }
+
+    /**
+     * Method to write current bit set
+     *
+     * @throws IOException Write issues
+     */
+    private void writeCurrentBitSet() throws IOException {
+        int pixel;
+<span class="nc" id="L229">        int offset = 0;</span>
+        int mask;
+        int maskPerByte;
+        int bitOffset;
+
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        if (this.y == this.imgHeight) {</span>
+<span class="nc" id="L235">            throw new IOException(labelUtil.getString(&quot;err.image.insufficientSize&quot;));</span>
+        }
+
+<span class="nc" id="L238">        maskPerByte = (int) (Math.pow(2, this.channelBitsUsed) - 1);</span>
+<span class="nc" id="L239">        mask = (maskPerByte &lt;&lt; 16) + (maskPerByte &lt;&lt; 8) + maskPerByte;</span>
+<span class="nc" id="L240">        pixel = this.image.getImage().getRGB(this.x, this.y) &amp; (0xFFFFFFFF - mask);</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">        for (int bit = 0; bit &lt; 3; bit++) {</span>
+<span class="nc" id="L243">            bitOffset = 0;</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">            for (int i = 0; i &lt; this.channelBitsUsed; i++) {</span>
+<span class="nc" id="L245">                bitOffset = (bitOffset &lt;&lt; 1) + this.bitSet[(bit * this.channelBitsUsed) + i];</span>
+            }
+<span class="nc" id="L247">            offset = (offset &lt;&lt; 8) + bitOffset;</span>
+        }
+<span class="nc" id="L249">        this.image.getImage().setRGB(this.x, this.y, pixel + offset);</span>
+<span class="nc" id="L250">    }</span>
+
+    /**
+     * Method to move on to next pixel
+     */
+    private void nextPixel() {
+<span class="nc" id="L256">        this.x++;</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        if (this.x == this.imgWidth) {</span>
+<span class="nc" id="L258">            this.x = 0;</span>
+<span class="nc" id="L259">            this.y++;</span>
+        }
+<span class="nc" id="L261">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

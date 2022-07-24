@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PluginManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util</a> &gt; <span class="el_source">PluginManager.java</span></div><h1>PluginManager.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util;
+
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.OpenStegoPlugin;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Utility class to load and manage the available stego plugins
+ */
+public class PluginManager {
+    /**
+     * Constructor is private so that this class is not instantiated
+     */
+    private PluginManager() {
+    }
+
+    /**
+     * Static variable to hold the list of available plugins
+     */
+<span class="nc" id="L32">    private static final List&lt;OpenStegoPlugin&lt;?&gt;&gt; plugins = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Static variable to hold a map of available plugins
+     */
+<span class="nc" id="L37">    private static final Map&lt;String, OpenStegoPlugin&lt;?&gt;&gt; pluginsMap = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Method to load the stego plugin classes
+     *
+     * @throws OpenStegoException Processing issues
+     */
+    public static void loadPlugins() throws OpenStegoException {
+<span class="nc" id="L45">        List&lt;String&gt; pluginList = new ArrayList&lt;&gt;();</span>
+        OpenStegoPlugin&lt;?&gt; plugin;
+
+        // Load internal plugins
+<span class="nc" id="L49">        try (InputStream is = PluginManager.class.getResourceAsStream(&quot;/OpenStegoPlugins.internal&quot;);</span>
+<span class="nc" id="L50">             InputStream isExt = PluginManager.class.getResourceAsStream(&quot;/OpenStegoPlugins.external&quot;)) {</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            if (is != null) {</span>
+<span class="nc" id="L53">                pluginList.addAll(StringUtil.getStringLines(new String(CommonUtil.streamToBytes(is))));</span>
+            }
+
+            // Load external plugins if available
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (isExt != null) {</span>
+<span class="nc" id="L58">                pluginList.addAll(StringUtil.getStringLines(new String(CommonUtil.streamToBytes(isExt))));</span>
+            }
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            for (String pluginClass : pluginList) {</span>
+<span class="nc" id="L62">                plugin = (OpenStegoPlugin&lt;?&gt;) Class.forName(pluginClass).getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L63">                plugins.add(plugin);</span>
+<span class="nc" id="L64">                pluginsMap.put(plugin.getName().toUpperCase(), plugin);</span>
+<span class="nc" id="L65">            }</span>
+<span class="nc" id="L66">        } catch (Exception ex) {</span>
+<span class="nc" id="L67">            throw new OpenStegoException(ex);</span>
+<span class="nc" id="L68">        }</span>
+<span class="nc" id="L69">    }</span>
+
+    /**
+     * Method to get the list of names of the loaded plugins
+     *
+     * @return List of names of the loaded plugins
+     */
+    @SuppressWarnings(&quot;unused&quot;)
+    public static List&lt;String&gt; getPluginNames() {
+<span class="nc" id="L78">        return plugins.stream().map(OpenStegoPlugin::getName).collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Method to get the list of the loaded plugins
+     *
+     * @return List of the loaded plugins
+     */
+    public static List&lt;OpenStegoPlugin&lt;?&gt;&gt; getPlugins() {
+<span class="nc" id="L87">        return plugins;</span>
+    }
+
+    /**
+     * Method to get the list of the data hiding plugins
+     *
+     * @return List of the data hiding plugins
+     */
+    public static List&lt;OpenStegoPlugin&lt;?&gt;&gt; getDataHidingPlugins() {
+<span class="nc" id="L96">        List&lt;OpenStegoPlugin&lt;?&gt;&gt; dhPlugins = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        for (OpenStegoPlugin&lt;?&gt; plugin : plugins) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if (plugin.getPurposes().contains(OpenStegoPlugin.Purpose.DATA_HIDING)) {</span>
+<span class="nc" id="L100">                dhPlugins.add(plugin);</span>
+            }
+<span class="nc" id="L102">        }</span>
+<span class="nc" id="L103">        return dhPlugins;</span>
+    }
+
+    /**
+     * Method to get the list of the watermarking plugins
+     *
+     * @return List of the watermarking plugins
+     */
+    public static List&lt;OpenStegoPlugin&lt;?&gt;&gt; getWatermarkingPlugins() {
+<span class="nc" id="L112">        List&lt;OpenStegoPlugin&lt;?&gt;&gt; dhPlugins = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (OpenStegoPlugin&lt;?&gt; plugin : plugins) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (plugin.getPurposes().contains(OpenStegoPlugin.Purpose.WATERMARKING)) {</span>
+<span class="nc" id="L116">                dhPlugins.add(plugin);</span>
+            }
+<span class="nc" id="L118">        }</span>
+<span class="nc" id="L119">        return dhPlugins;</span>
+    }
+
+    /**
+     * Method to get the plugin object based on the name of the plugin
+     *
+     * @param name Name of the plugin
+     * @return Plugin object
+     */
+    public static OpenStegoPlugin&lt;?&gt; getPluginByName(String name) {
+<span class="nc" id="L129">        return pluginsMap.get(name.toUpperCase());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

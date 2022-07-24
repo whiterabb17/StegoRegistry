@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStegoException.java</span></div><h1>OpenStegoException.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import com.openstego.desktop.util.LabelUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Custom exception class for OpenStego
+ */
+public class OpenStegoException extends Exception {
+    private static final long serialVersionUID = 668241029491685413L;
+
+    /**
+     * Error Code - Unhandled exception
+     */
+    static final int UNHANDLED_EXCEPTION = 0;
+
+    /**
+     * Map to store error code to message key mapping
+     */
+<span class="fc" id="L28">    private static final Map&lt;String, String&gt; errMsgKeyMap = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Error code for the exception
+     */
+    private final int errorCode;
+
+    /**
+     * Namespace for the exception
+     */
+    private final String namespace;
+
+    /**
+     * Constructor using default namespace for unhandled exceptions
+     *
+     * @param cause Original exception which caused this exception to be raised
+     */
+    public OpenStegoException(Throwable cause) {
+<span class="fc" id="L46">        this(cause, OpenStego.NAMESPACE, UNHANDLED_EXCEPTION, (Object[]) null);</span>
+<span class="fc" id="L47">    }</span>
+
+    /**
+     * Default constructor
+     *
+     * @param cause     Original exception which caused this exception to be raised
+     * @param namespace Namespace of the error
+     * @param errorCode Error code for the exception
+     */
+    public OpenStegoException(Throwable cause, String namespace, int errorCode) {
+<span class="fc" id="L57">        this(cause, namespace, errorCode, (Object[]) null);</span>
+<span class="fc" id="L58">    }</span>
+
+    /**
+     * Constructor with a single parameter for the message
+     *
+     * @param cause     Original exception which caused this exception to be raised
+     * @param namespace Namespace of the error
+     * @param errorCode Error code for the exception
+     * @param param     Parameter for exception message
+     */
+    public OpenStegoException(Throwable cause, String namespace, int errorCode, String param) {
+<span class="nc" id="L69">        this(cause, namespace, errorCode, new Object[]{param});</span>
+<span class="nc" id="L70">    }</span>
+
+    /**
+     * Constructor which takes object array for parameters for the message
+     *
+     * @param cause     Original exception which caused this exception to be raised
+     * @param namespace Namespace of the error
+     * @param errorCode Error code for the exception
+     * @param params    Parameters for exception message
+     */
+    public OpenStegoException(Throwable cause, String namespace, int errorCode, Object... params) {
+<span class="fc bfc" id="L81" title="All 4 branches covered.">        super((OpenStego.NAMESPACE.equals(namespace) &amp;&amp; errorCode == UNHANDLED_EXCEPTION) ? cause.toString()</span>
+<span class="fc" id="L82">                : LabelUtil.getInstance(namespace).getString(errMsgKeyMap.get(namespace + errorCode), params), cause);</span>
+
+<span class="fc" id="L84">        this.namespace = namespace;</span>
+<span class="fc" id="L85">        this.errorCode = errorCode;</span>
+<span class="fc" id="L86">    }</span>
+
+    /**
+     * Get method for errorCode
+     *
+     * @return errorCode
+     */
+    public int getErrorCode() {
+<span class="fc" id="L94">        return this.errorCode;</span>
+    }
+
+    /**
+     * Get method for namespace
+     *
+     * @return namespace
+     */
+    public String getNamespace() {
+<span class="fc" id="L103">        return this.namespace;</span>
+    }
+
+    /**
+     * Method to add new error codes to the namespace
+     *
+     * @param namespace Namespace for the error
+     * @param errorCode Error code of the error
+     * @param labelKey  Key of the label for the error
+     */
+    public static void addErrorCode(String namespace, int errorCode, String labelKey) {
+<span class="fc" id="L114">        errMsgKeyMap.put(namespace + errorCode, labelKey);</span>
+<span class="fc" id="L115">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

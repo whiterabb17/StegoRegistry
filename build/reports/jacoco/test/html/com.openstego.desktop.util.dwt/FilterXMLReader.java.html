@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterXMLReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util.dwt</a> &gt; <span class="el_source">FilterXMLReader.java</span></div><h1>FilterXMLReader.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util.dwt;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Class to read the Filters XML and generate corresponding Java Objects
+ */
+public class FilterXMLReader {
+    /**
+     * Constructor is private so that this class is not instantiated
+     */
+    private FilterXMLReader() {
+    }
+
+    /**
+     * This method parses the given XML file into the list of objects
+     *
+     * @param fileURI URI for the XML file
+     * @return Map of filters with key being Integer object for filter ID
+     */
+    public static Map&lt;Integer, FilterGH&gt; parse(String fileURI) {
+<span class="nc" id="L38">        Map&lt;Integer, FilterGH&gt; filterGHMap = new HashMap&lt;&gt;();</span>
+        DocumentBuilder db;
+        Document dom;
+        Element el;
+        NodeList nl;
+        FilterGH filterGH;
+
+        try {
+<span class="nc" id="L46">            db = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+
+            // Parse to get DOM representation of the XML file
+<span class="nc" id="L49">            dom = db.parse(FilterXMLReader.class.getResourceAsStream(fileURI));</span>
+
+            // Get a node list of filterGH elements
+<span class="nc" id="L52">            nl = dom.getDocumentElement().getElementsByTagName(&quot;filterGH&quot;);</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">            if (nl != null &amp;&amp; nl.getLength() &gt; 0) {</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                for (int i = 0; i &lt; nl.getLength(); i++) {</span>
+                    // Get the 'filterGH' element
+<span class="nc" id="L56">                    el = (Element) nl.item(i);</span>
+
+                    // Create the object
+<span class="nc" id="L59">                    filterGH = getFilterGH(el);</span>
+
+                    // Add it to map
+<span class="nc" id="L62">                    filterGHMap.put(filterGH.getId(), filterGH);</span>
+                }
+            }
+
+<span class="nc" id="L66">            return filterGHMap;</span>
+<span class="nc" id="L67">        } catch (ParserConfigurationException | SAXException | IOException pcEx) {</span>
+<span class="nc" id="L68">            pcEx.printStackTrace();</span>
+<span class="nc" id="L69">            throw new IllegalArgumentException(&quot;Invalid Filter XML file&quot;);</span>
+        }
+    }
+
+    /**
+     * This method reads XML node and creates corresponding FilterGH object
+     *
+     * @param el XML node element
+     * @return FilterGH object
+     */
+    private static FilterGH getFilterGH(Element el) {
+<span class="nc" id="L80">        FilterGH filterGH = new FilterGH();</span>
+        Element innerEl;
+        NodeList nl;
+        Filter filter;
+
+<span class="nc" id="L85">        filterGH.setId(Integer.parseInt(el.getAttribute(&quot;id&quot;)));</span>
+<span class="nc" id="L86">        filterGH.setName(el.getAttribute(&quot;name&quot;));</span>
+<span class="nc" id="L87">        filterGH.setType(el.getAttribute(&quot;type&quot;));</span>
+
+        // Get a nodelist of filter elements
+<span class="nc" id="L90">        nl = el.getElementsByTagName(&quot;filter&quot;);</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">        if (nl != null &amp;&amp; nl.getLength() &gt; 0) {</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            for (int i = 0; i &lt; nl.getLength(); i++) {</span>
+                // Get the 'filter' element
+<span class="nc" id="L94">                innerEl = (Element) nl.item(i);</span>
+
+                // Create the object
+<span class="nc" id="L97">                filter = getFilter(innerEl);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                filter.setHiPass(!((i &amp; 1) == 1));</span>
+
+                // Set the object in filterGH
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                if (i == 0) {</span>
+<span class="nc" id="L102">                    filterGH.setG(filter);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                } else if (i == 1) {</span>
+<span class="nc" id="L104">                    filterGH.setH(filter);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                } else if (i == 2) {</span>
+<span class="nc" id="L106">                    filterGH.setGi(filter);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                } else if (i == 3) {</span>
+<span class="nc" id="L108">                    filterGH.setHi(filter);</span>
+                }
+            }
+        }
+
+<span class="nc" id="L113">        return filterGH;</span>
+    }
+
+    /**
+     * This method reads XML node and creates corresponding Filter object
+     *
+     * @param el XML node element
+     * @return Filter object
+     */
+    private static Filter getFilter(Element el) {
+<span class="nc" id="L123">        Filter filter = new Filter();</span>
+        Element innerEl;
+        NodeList nl;
+<span class="nc" id="L126">        double[] data = null;</span>
+
+<span class="nc" id="L128">        filter.setType(el.getAttribute(&quot;type&quot;));</span>
+<span class="nc" id="L129">        filter.setStart(Integer.parseInt(el.getAttribute(&quot;start&quot;)));</span>
+<span class="nc" id="L130">        filter.setEnd(Integer.parseInt(el.getAttribute(&quot;end&quot;)));</span>
+
+        // Get a nodelist of data elements
+<span class="nc" id="L133">        nl = el.getElementsByTagName(&quot;data&quot;);</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">        if (nl != null &amp;&amp; nl.getLength() &gt; 0) {</span>
+<span class="nc" id="L135">            data = new double[nl.getLength()];</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            for (int i = 0; i &lt; nl.getLength(); i++) {</span>
+                // Get the 'data' element
+<span class="nc" id="L138">                innerEl = (Element) nl.item(i);</span>
+
+                // Add data to array
+<span class="nc" id="L141">                data[i] = Double.parseDouble(innerEl.getFirstChild().getNodeValue());</span>
+            }
+        }
+
+<span class="nc" id="L145">        filter.setData(data);</span>
+
+<span class="nc" id="L147">        return filter;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

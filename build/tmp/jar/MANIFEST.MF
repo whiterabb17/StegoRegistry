@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Name: OpenStego
+Main-Class: com.openstego.desktop.OpenStego
+Implementation-Version: 0.8.4
+Built-By: Samir Vaidya
+

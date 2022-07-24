@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WatermarkingPlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">WatermarkingPlugin.java</span></div><h1>WatermarkingPlugin.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Abstract class for stego plugins for OpenStego purpose of which is watermarking. It implements few methods which are
+ * specific for watermarking, and provides dummy implementation for the methods which are specific to data hiding
+ * purposes so that sub-class does not need to implement them
+ *
+ * @see DataHidingPlugin
+ */
+<span class="nc" id="L19">public abstract class WatermarkingPlugin&lt;C extends OpenStegoConfig&gt; extends OpenStegoPlugin&lt;C&gt; {</span>
+    // ------------- Metadata Methods -------------
+
+    /**
+     * Gives the purpose(s) of the plugin. This implementation returns only one value - Watermarking
+     *
+     * @return Purpose(s) of the plugin
+     */
+    @Override
+    public final List&lt;Purpose&gt; getPurposes() {
+<span class="nc" id="L29">        List&lt;Purpose&gt; purposes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L30">        purposes.add(Purpose.WATERMARKING);</span>
+<span class="nc" id="L31">        return purposes;</span>
+    }
+
+    // ------------- Core Stego Methods -------------
+
+    /**
+     * Method to extract the message file name from the stego data. This implementation returns &lt;code&gt;null&lt;/code&gt; as
+     * this class is for watermarking plugins only
+     *
+     * @param stegoData     Stego data containing the message
+     * @param stegoFileName Name of the stego file
+     * @return Message file name
+     */
+    @Override
+    public final String extractMsgFileName(byte[] stegoData, String stegoFileName) {
+<span class="nc" id="L46">        return null;</span>
+    }
+
+    /**
+     * Method to get correlation value which above which it can be considered that watermark strength is high (default
+     * to 0.5 which is safe for general watermarking)
+     *
+     * @return High watermark
+     */
+    @Override
+    public double getHighWatermarkLevel() {
+<span class="nc" id="L57">        return 0.5;</span>
+    }
+
+    /**
+     * Method to get correlation value which below which it can be considered that watermark strength is low (default to
+     * 0.2 which is safe for general watermarking)
+     *
+     * @return Low watermark
+     */
+    @Override
+    public double getLowWatermarkLevel() {
+<span class="nc" id="L68">        return 0.2;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

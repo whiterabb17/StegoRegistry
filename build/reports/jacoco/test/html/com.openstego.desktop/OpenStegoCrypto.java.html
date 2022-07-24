@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoCrypto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStegoCrypto.java</span></div><h1>OpenStegoCrypto.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
+import java.security.AlgorithmParameters;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.KeySpec;
+
+/**
+ * This is the class for providing cryptography support to OpenStego.
+ */
+public class OpenStegoCrypto {
+    /**
+     * Constant for algorithm - DES
+     */
+    public static final String ALGO_DES = &quot;DES&quot;;
+    /**
+     * Constant for algorithm - AES128
+     */
+    public static final String ALGO_AES128 = &quot;AES128&quot;;
+    /**
+     * Constant for algorithm - AES256
+     */
+    public static final String ALGO_AES256 = &quot;AES256&quot;;
+
+    /**
+     * 8-byte Salt for Password-based cryptography
+     */
+<span class="fc" id="L39">    private final byte[] SALT = {(byte) 0x28, (byte) 0x5F, (byte) 0x71, (byte) 0xC9, (byte) 0x1E, (byte) 0x35, (byte) 0x0A, (byte) 0x62};</span>
+
+    /**
+     * Iteration count for Password-based cryptography
+     */
+<span class="fc" id="L44">    private final int ITER_COUNT = 7;</span>
+
+    /**
+     * Secret key for encryption
+     */
+    private final SecretKey secretKey;
+
+    /**
+     * Default constructor
+     *
+     * @param password  Password to use for encryption
+     * @param algorithm Cryptography algorithm to use. If null or blank value is provided, then it defaults to AES128
+     * @throws OpenStegoException Processing issues
+     */
+<span class="fc" id="L58">    public OpenStegoCrypto(String password, String algorithm) throws OpenStegoException {</span>
+        KeySpec keySpec;
+
+        try {
+<span class="pc bpc" id="L62" title="3 of 6 branches missed.">            if (algorithm == null || algorithm.trim().equals(&quot;&quot;) || ALGO_AES128.equalsIgnoreCase(algorithm)) {</span>
+<span class="fc" id="L63">                algorithm = &quot;PBEWithHmacSHA256AndAES_128&quot;;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            } else if (ALGO_AES256.equalsIgnoreCase(algorithm)) {</span>
+<span class="nc" id="L65">                algorithm = &quot;PBEWithHmacSHA256AndAES_256&quot;;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            } else if (ALGO_DES.equalsIgnoreCase(algorithm)) {</span>
+<span class="nc" id="L67">                System.out.println(&quot;Warning: Using insecure algorithm: &quot; + algorithm);</span>
+<span class="nc" id="L68">                algorithm = &quot;PBEWithMD5AndDES&quot;;</span>
+            } else {
+<span class="nc" id="L70">                throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.INVALID_CRYPT_ALGO, algorithm);</span>
+            }
+
+            // Create the key
+<span class="fc" id="L74">            keySpec = new PBEKeySpec(password.toCharArray(), this.SALT, this.ITER_COUNT);</span>
+<span class="fc" id="L75">            this.secretKey = SecretKeyFactory.getInstance(algorithm).generateSecret(keySpec);</span>
+<span class="nc" id="L76">        } catch (Exception ex) {</span>
+<span class="nc" id="L77">            throw new OpenStegoException(ex);</span>
+<span class="fc" id="L78">        }</span>
+<span class="fc" id="L79">    }</span>
+
+    /**
+     * Method to encrypt the data
+     *
+     * @param input Data to be encrypted
+     * @return Encrypted data
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] encrypt(byte[] input) throws OpenStegoException {
+        try {
+<span class="fc" id="L90">            Cipher encryptCipher = Cipher.getInstance(this.secretKey.getAlgorithm());</span>
+<span class="fc" id="L91">            AlgorithmParameterSpec algoParamSpec = new PBEParameterSpec(this.SALT, this.ITER_COUNT);</span>
+<span class="fc" id="L92">            encryptCipher.init(Cipher.ENCRYPT_MODE, this.secretKey, algoParamSpec);</span>
+
+<span class="fc" id="L94">            byte[] algoParams = encryptCipher.getParameters().getEncoded();</span>
+<span class="fc" id="L95">            byte[] msg = encryptCipher.doFinal(input);</span>
+<span class="fc" id="L96">            byte paramLen = Byte.parseByte(Integer.toString(algoParams.length));</span>
+
+<span class="fc" id="L98">            byte[] out = new byte[1 + paramLen + msg.length];</span>
+            // First byte = length of algo params
+<span class="fc" id="L100">            out[0] = paramLen;</span>
+            // Next is algorithm params
+<span class="fc" id="L102">            System.arraycopy(algoParams, 0, out, 1, paramLen);</span>
+            // Next is encrypted message
+<span class="fc" id="L104">            System.arraycopy(msg, 0, out, paramLen + 1, msg.length);</span>
+
+<span class="fc" id="L106">            return out;</span>
+<span class="nc" id="L107">        } catch (Exception ex) {</span>
+<span class="nc" id="L108">            throw new OpenStegoException(ex);</span>
+        }
+    }
+
+    /**
+     * Method to decrypt the data
+     *
+     * @param input Data to be decrypted
+     * @return Decrypted data (returns &lt;code&gt;null&lt;/code&gt; if password is invalid)
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] decrypt(byte[] input) throws OpenStegoException {
+        try {
+            // First byte is algo params length
+<span class="fc" id="L122">            byte paramLen = input[0];</span>
+            // Copy algorithm params
+<span class="fc" id="L124">            byte[] algoParamData = new byte[paramLen];</span>
+<span class="fc" id="L125">            System.arraycopy(input, 1, algoParamData, 0, paramLen);</span>
+            // Copy encrypted message
+<span class="fc" id="L127">            byte[] msg = new byte[input.length - paramLen - 1];</span>
+<span class="fc" id="L128">            System.arraycopy(input, paramLen + 1, msg, 0, msg.length);</span>
+
+<span class="fc" id="L130">            AlgorithmParameters algoParams = AlgorithmParameters.getInstance(this.secretKey.getAlgorithm());</span>
+<span class="fc" id="L131">            algoParams.init(algoParamData);</span>
+<span class="fc" id="L132">            Cipher decryptCipher = Cipher.getInstance(this.secretKey.getAlgorithm());</span>
+<span class="fc" id="L133">            decryptCipher.init(Cipher.DECRYPT_MODE, this.secretKey, algoParams);</span>
+<span class="fc" id="L134">            return decryptCipher.doFinal(msg);</span>
+<span class="nc" id="L135">        } catch (BadPaddingException bpEx) {</span>
+<span class="nc" id="L136">            throw new OpenStegoException(bpEx, OpenStego.NAMESPACE, OpenStegoErrors.INVALID_PASSWORD);</span>
+<span class="nc" id="L137">        } catch (Exception ex) {</span>
+<span class="nc" id="L138">            throw new OpenStegoException(ex);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

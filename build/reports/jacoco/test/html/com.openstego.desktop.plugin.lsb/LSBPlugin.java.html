@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBPlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBPlugin.java</span></div><h1>LSBPlugin.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.plugin.template.image.DHImagePluginTemplate;
+import com.openstego.desktop.util.ImageHolder;
+import com.openstego.desktop.util.ImageUtil;
+import com.openstego.desktop.util.LabelUtil;
+import com.openstego.desktop.util.cmd.CmdLineOption;
+import com.openstego.desktop.util.cmd.CmdLineOptions;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * Plugin for OpenStego which implements the Least-significant bit algorithm of steganography
+ */
+public class LSBPlugin extends DHImagePluginTemplate&lt;LSBConfig&gt; {
+    /**
+     * LabelUtil instance to retrieve labels
+     */
+<span class="fc" id="L31">    private static final LabelUtil labelUtil = LabelUtil.getInstance(LSBPlugin.NAMESPACE);</span>
+
+    /**
+     * Constant for Namespace to use for this plugin
+     */
+    public final static String NAMESPACE = &quot;LSB&quot;;
+
+    /**
+     * Default constructor
+     */
+<span class="fc" id="L41">    public LSBPlugin() {</span>
+<span class="fc" id="L42">        LabelUtil.addNamespace(NAMESPACE, &quot;i18n.LSBPluginLabels&quot;);</span>
+<span class="fc" id="L43">        LSBErrors.init(); // Initialize error codes</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Gives the name of the plugin
+     *
+     * @return Name of the plugin
+     */
+    @Override
+    public String getName() {
+<span class="nc" id="L53">        return &quot;LSB&quot;;</span>
+    }
+
+    /**
+     * Gives a short description of the plugin
+     *
+     * @return Short description of the plugin
+     */
+    @Override
+    public String getDescription() {
+<span class="nc" id="L63">        return labelUtil.getString(&quot;plugin.description&quot;);</span>
+    }
+
+    /**
+     * Method to embed the message into the cover data
+     *
+     * @param msg           Message to be embedded
+     * @param msgFileName   Name of the message file. If this value is provided, then the filename should be
+     *                      embedded in the cover data
+     * @param cover         Cover data into which message needs to be embedded
+     * @param coverFileName Name of the cover file
+     * @param stegoFileName Name of the output stego file
+     * @return Stego data containing the message
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    public byte[] embedData(byte[] msg, String msgFileName, byte[] cover, String coverFileName, String stegoFileName) throws OpenStegoException {
+        int numOfPixels;
+        ImageHolder image;
+
+        try {
+            // Generate random image, if input image is not provided
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if (cover == null) {</span>
+<span class="nc" id="L86">                numOfPixels = (int) (LSBDataHeader.getMaxHeaderSize() * 8 / 3.0);</span>
+<span class="nc" id="L87">                numOfPixels += (int) (msg.length * 8 / (3.0 * this.config.getMaxBitsUsedPerChannel()));</span>
+<span class="nc" id="L88">                image = ImageUtil.generateRandomImage(numOfPixels);</span>
+            } else {
+<span class="nc" id="L90">                image = ImageUtil.byteArrayToImage(cover, coverFileName);</span>
+            }
+<span class="nc" id="L92">            try (LSBOutputStream lsbOS = new LSBOutputStream(image, msg.length, msgFileName, this.config)) {</span>
+<span class="nc" id="L93">                lsbOS.write(msg);</span>
+<span class="nc" id="L94">                lsbOS.flush();</span>
+<span class="nc" id="L95">                image = lsbOS.getImage();</span>
+            }
+
+<span class="nc" id="L98">            return ImageUtil.imageToByteArray(image, stegoFileName, this);</span>
+<span class="nc" id="L99">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L100">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to extract the message file name from the stego data
+     *
+     * @param stegoData     Stego data containing the message
+     * @param stegoFileName Name of the stego file
+     * @return Message file name
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    public String extractMsgFileName(byte[] stegoData, String stegoFileName) throws OpenStegoException {
+<span class="nc" id="L114">        ImageHolder imgHolder = ImageUtil.byteArrayToImage(stegoData, stegoFileName);</span>
+<span class="nc" id="L115">        try (LSBInputStream lsbIS = new LSBInputStream(imgHolder, this.config)) {</span>
+<span class="nc" id="L116">            return lsbIS.getDataHeader().getFileName();</span>
+<span class="nc" id="L117">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L118">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to extract the message from the stego data
+     *
+     * @param stegoData     Stego data containing the message
+     * @param stegoFileName Name of the stego file
+     * @param origSigData   Optional signature data file for watermark
+     * @return Extracted message
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    public byte[] extractData(byte[] stegoData, String stegoFileName, byte[] origSigData) throws OpenStegoException {
+        int bytesRead;
+        byte[] data;
+        LSBDataHeader header;
+<span class="nc" id="L136">        ImageHolder imgHolder = ImageUtil.byteArrayToImage(stegoData, stegoFileName);</span>
+
+<span class="nc" id="L138">        try (LSBInputStream lsbIS = new LSBInputStream(imgHolder, this.config)) {</span>
+<span class="nc" id="L139">            header = lsbIS.getDataHeader();</span>
+<span class="nc" id="L140">            data = new byte[header.getDataLength()];</span>
+
+<span class="nc" id="L142">            bytesRead = lsbIS.read(data, 0, data.length);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (bytesRead != data.length) {</span>
+<span class="nc" id="L144">                throw new OpenStegoException(null, NAMESPACE, LSBErrors.ERR_IMAGE_DATA_READ);</span>
+            }
+
+<span class="nc" id="L147">            return data;</span>
+<span class="nc" id="L148">        } catch (IOException ex) {</span>
+<span class="nc" id="L149">            throw new OpenStegoException(ex);</span>
+        }
+    }
+
+    /**
+     * Method to get the list of supported file extensions for writing
+     *
+     * @return List of supported file extensions for writing
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    public List&lt;String&gt; getWritableFileExtensions() throws OpenStegoException {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (writeFormats != null) {</span>
+<span class="nc" id="L162">            return writeFormats;</span>
+        }
+
+<span class="nc" id="L165">        super.getWritableFileExtensions();</span>
+        String format;
+        String[] compTypes;
+        Iterator&lt;ImageWriter&gt; iter;
+        ImageWriteParam writeParam;
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">        for (int i = writeFormats.size() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L172">            format = writeFormats.get(i);</span>
+<span class="nc" id="L173">            iter = ImageIO.getImageWritersBySuffix(format);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            while (iter.hasNext()) {</span>
+<span class="nc" id="L175">                writeParam = (iter.next()).getDefaultWriteParam();</span>
+                try {
+<span class="nc" id="L177">                    writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);</span>
+<span class="nc" id="L178">                    compTypes = writeParam.getCompressionTypes();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                    if (compTypes.length &gt; 0) {</span>
+<span class="nc" id="L180">                        writeParam.setCompressionType(compTypes[0]);</span>
+                    }
+<span class="nc" id="L182">                } catch (UnsupportedOperationException uoEx) {</span>
+                    // Compression not supported
+<span class="nc" id="L184">                    break;</span>
+<span class="nc" id="L185">                }</span>
+
+                // Only lossless image compression is supported
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                if (writeParam.isCompressionLossless()) {</span>
+<span class="nc" id="L189">                    break;</span>
+                }
+<span class="nc" id="L191">                writeFormats.remove(i);</span>
+            }
+        }
+
+        // Expicilty removing GIF and WBMP formats, as they use unsupported color models
+<span class="nc" id="L196">        writeFormats.remove(&quot;gif&quot;);</span>
+<span class="nc" id="L197">        writeFormats.remove(&quot;wbmp&quot;);</span>
+        // Expicilty removing TIF(F) formats, as they are not working correctly - TODO check why
+<span class="nc" id="L199">        writeFormats.remove(&quot;tif&quot;);</span>
+<span class="nc" id="L200">        writeFormats.remove(&quot;tiff&quot;);</span>
+
+<span class="nc" id="L202">        return writeFormats;</span>
+    }
+
+    /**
+     * Method to populate the standard command-line options used by this plugin
+     *
+     * @param options Existing command-line options. Plugin-specific options will get added to this list
+     */
+    @Override
+    public void populateStdCmdLineOptions(CmdLineOptions options) {
+<span class="nc" id="L212">        options.add(&quot;-b&quot;, &quot;--maxBitsUsedPerChannel&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L213">    }</span>
+
+    /**
+     * Method to create default configuration data (specific to this plugin)
+     *
+     * @return Configuration data
+     */
+    @Override
+    protected LSBConfig createConfig() {
+<span class="nc" id="L222">        return new LSBConfig();</span>
+    }
+
+    /**
+     * Method to create configuration data (specific to this plugin) based on the command-line options
+     *
+     * @param options Command-line options
+     * @return Configuration data
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    protected LSBConfig createConfig(CmdLineOptions options) throws OpenStegoException {
+<span class="nc" id="L234">        LSBConfig config = new LSBConfig();</span>
+<span class="nc" id="L235">        config.initialize(options);</span>
+<span class="nc" id="L236">        return config;</span>
+    }
+
+    /**
+     * Method to get the usage details of the plugin
+     *
+     * @return Usage details of the plugin
+     */
+    @Override
+    public String getUsage() {
+<span class="nc" id="L246">        LSBConfig defaultConfig = new LSBConfig();</span>
+<span class="nc" id="L247">        return labelUtil.getString(&quot;plugin.usage&quot;, defaultConfig.getMaxBitsUsedPerChannel());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

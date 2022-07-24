@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoFrame.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.ui</a> &gt; <span class="el_source">OpenStegoFrame.java</span></div><h1>OpenStegoFrame.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.ui;
+
+import com.openstego.desktop.OpenStego;
+import com.openstego.desktop.OpenStegoPlugin;
+import com.openstego.desktop.util.LabelUtil;
+
+import javax.swing.*;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.plaf.metal.MetalToggleButtonUI;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Objects;
+
+/**
+ * Frame class to build the Swing UI for OpenStego. This class includes only graphics rendering
+ * code. Listeners are implemented in {@link com.openstego.desktop.ui.OpenStegoUI} class.
+ */
+public class OpenStegoFrame extends JFrame {
+    private static final long serialVersionUID = -880718904125121559L;
+    private static final boolean toggleUiHack = false;
+
+    /**
+     * LabelUtil instance to retrieve labels
+     */
+<span class="nc" id="L34">    private static final LabelUtil labelUtil = LabelUtil.getInstance(OpenStego.NAMESPACE);</span>
+
+    /**
+     * Number of columns for text fields
+     */
+    public static final int TEXTFIELD_SIZE = 30;
+    /**
+     * Number of columns for password fields
+     */
+    public static final int PWD_FIELD_SIZE = 15;
+
+    private JMenuBar topMenuBar;
+    private JMenu fileMenu;
+    private JMenuItem fileExitMenuItem;
+    private JMenu helpMenu;
+    private JMenuItem helpAboutMenuItem;
+
+    private JPanel mainContentPane;
+
+    private JScrollPane accordionPane;
+    private JPanel accordion;
+<span class="nc" id="L55">    private final ButtonGroup actionButtonGroup = new ButtonGroup();</span>
+    private JToggleButton embedButton;
+    private JToggleButton extractButton;
+    private JToggleButton genSigButton;
+    private JToggleButton signWmButton;
+    private JToggleButton verifyWmButton;
+
+    private JPanel headerPanel;
+    private JLabel header;
+
+    private JPanel mainPanel;
+    private EmbedPanel embedPanel;
+    private ExtractPanel extractPanel;
+    private GenerateSignaturePanel genSigPanel;
+    private EmbedWatermarkPanel embedWmPanel;
+    private VerifyWatermarkPanel verifyWmPanel;
+
+    private final OpenStegoPlugin&lt;?&gt; dhPlugin;
+
+    /**
+     * Default constructor
+     */
+    @SuppressWarnings(&quot;unused&quot;)
+    public OpenStegoFrame(OpenStegoPlugin&lt;?&gt; dhPlugin, OpenStegoPlugin&lt;?&gt; wmPlugin) {
+<span class="nc" id="L79">        super();</span>
+<span class="nc" id="L80">        this.dhPlugin = dhPlugin;</span>
+<span class="nc" id="L81">        initialize();</span>
+<span class="nc" id="L82">        setActionCommands();</span>
+<span class="nc" id="L83">        setupUI();</span>
+<span class="nc" id="L84">    }</span>
+
+    /**
+     * Getter method for topMenuBar
+     *
+     * @return topMenuBar
+     */
+    public JMenuBar getTopMenuBar() {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (this.topMenuBar == null) {</span>
+<span class="nc" id="L93">            this.topMenuBar = new JMenuBar();</span>
+<span class="nc" id="L94">            this.topMenuBar.add(getFileMenu());</span>
+<span class="nc" id="L95">            this.topMenuBar.add(getHelpMenu());</span>
+        }
+<span class="nc" id="L97">        return this.topMenuBar;</span>
+    }
+
+    /**
+     * Getter method for fileMenu
+     *
+     * @return fileMenu
+     */
+    public JMenu getFileMenu() {
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (this.fileMenu == null) {</span>
+<span class="nc" id="L107">            this.fileMenu = new JMenu(labelUtil.getString(&quot;gui.menu.file&quot;));</span>
+<span class="nc" id="L108">            this.fileMenu.setMnemonic(KeyEvent.VK_F);</span>
+<span class="nc" id="L109">            this.fileMenu.add(getFileExitMenuItem());</span>
+        }
+<span class="nc" id="L111">        return this.fileMenu;</span>
+    }
+
+    /**
+     * Getter method for fileExitMenuItem
+     *
+     * @return fileExitMenuItem
+     */
+    public JMenuItem getFileExitMenuItem() {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (this.fileExitMenuItem == null) {</span>
+<span class="nc" id="L121">            this.fileExitMenuItem = new JMenuItem(labelUtil.getString(&quot;gui.menu.file.exit&quot;));</span>
+<span class="nc" id="L122">            this.fileExitMenuItem.setMnemonic(KeyEvent.VK_X);</span>
+        }
+<span class="nc" id="L124">        return this.fileExitMenuItem;</span>
+    }
+
+    /**
+     * Getter method for helpMenu
+     *
+     * @return helpMenu
+     */
+    public JMenu getHelpMenu() {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (this.helpMenu == null) {</span>
+<span class="nc" id="L134">            this.helpMenu = new JMenu(labelUtil.getString(&quot;gui.menu.help&quot;));</span>
+<span class="nc" id="L135">            this.helpMenu.setMnemonic(KeyEvent.VK_H);</span>
+<span class="nc" id="L136">            this.helpMenu.add(getHelpAboutMenuItem());</span>
+        }
+<span class="nc" id="L138">        return this.helpMenu;</span>
+    }
+
+    /**
+     * Getter method for helpAboutMenuItem
+     *
+     * @return helpAboutMenuItem
+     */
+    public JMenuItem getHelpAboutMenuItem() {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (this.helpAboutMenuItem == null) {</span>
+<span class="nc" id="L148">            this.helpAboutMenuItem = new JMenuItem(labelUtil.getString(&quot;gui.menu.help.about&quot;));</span>
+<span class="nc" id="L149">            this.helpAboutMenuItem.setMnemonic(KeyEvent.VK_A);</span>
+        }
+<span class="nc" id="L151">        return this.helpAboutMenuItem;</span>
+    }
+
+    /**
+     * Getter method for mainContentPane
+     *
+     * @return mainContentPane
+     */
+    public JPanel getMainContentPane() {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (this.mainContentPane == null) {</span>
+<span class="nc" id="L161">            this.mainContentPane = new JPanel();</span>
+<span class="nc" id="L162">            this.mainContentPane.setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L164">            this.mainContentPane.add(getAccordionPane(), BorderLayout.LINE_START);</span>
+
+<span class="nc" id="L166">            JPanel rightPane = new JPanel();</span>
+<span class="nc" id="L167">            rightPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));</span>
+<span class="nc" id="L168">            rightPane.setLayout(new BorderLayout());</span>
+<span class="nc" id="L169">            this.mainContentPane.add(rightPane, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L171">            rightPane.add(getHeaderPanel(), BorderLayout.PAGE_START);</span>
+<span class="nc" id="L172">            rightPane.add(getMainPanel(), BorderLayout.CENTER);</span>
+        }
+<span class="nc" id="L174">        return this.mainContentPane;</span>
+    }
+
+    /**
+     * Getter method for accordionPane
+     *
+     * @return accordionPane
+     */
+    public JScrollPane getAccordionPane() {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (this.accordionPane == null) {</span>
+<span class="nc" id="L184">            this.accordionPane = new JScrollPane();</span>
+<span class="nc" id="L185">            this.accordionPane.setBorder(null);</span>
+<span class="nc" id="L186">            this.accordionPane.setViewportView(getAccordion());</span>
+        }
+<span class="nc" id="L188">        return this.accordionPane;</span>
+    }
+
+    /**
+     * Getter method for accordion
+     *
+     * @return accordion
+     */
+    public JPanel getAccordion() {
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (this.accordion == null) {</span>
+<span class="nc" id="L198">            this.accordion = new JPanel();</span>
+<span class="nc" id="L199">            this.accordion.setLayout(new GridBagLayout());</span>
+
+<span class="nc" id="L201">            int pad = 20;</span>
+<span class="nc" id="L202">            int gridy = 0;</span>
+<span class="nc" id="L203">            GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L204">            c.fill = GridBagConstraints.HORIZONTAL;</span>
+
+<span class="nc" id="L206">            c.gridy = gridy++;</span>
+<span class="nc" id="L207">            this.accordion.add(createAccordionHeader(labelUtil.getString(&quot;gui.label.tabHeader.dataHiding&quot;)), c);</span>
+
+<span class="nc" id="L209">            c.gridy = gridy++;</span>
+<span class="nc" id="L210">            c.insets = new Insets(0, pad, 0, pad);</span>
+<span class="nc" id="L211">            this.accordion.add(getEmbedButton(), c);</span>
+
+<span class="nc" id="L213">            c.gridy = gridy++;</span>
+<span class="nc" id="L214">            this.accordion.add(getExtractButton(), c);</span>
+
+<span class="nc" id="L216">            c.gridy = gridy++;</span>
+<span class="nc" id="L217">            this.accordion.add(Box.createVerticalStrut(20), c);</span>
+
+<span class="nc" id="L219">            c.gridy = gridy++;</span>
+<span class="nc" id="L220">            c.insets = new Insets(0, 0, 0, 0);</span>
+<span class="nc" id="L221">            this.accordion.add(createAccordionHeader(labelUtil.getString(&quot;gui.label.tabHeader.watermarking&quot;)), c);</span>
+
+<span class="nc" id="L223">            c.gridy = gridy++;</span>
+<span class="nc" id="L224">            c.insets = new Insets(0, pad, 0, pad);</span>
+<span class="nc" id="L225">            this.accordion.add(getGenSigButton(), c);</span>
+
+<span class="nc" id="L227">            c.gridy = gridy++;</span>
+<span class="nc" id="L228">            this.accordion.add(getSignWmButton(), c);</span>
+
+<span class="nc" id="L230">            c.gridy = gridy++;</span>
+<span class="nc" id="L231">            this.accordion.add(getVerifyWmButton(), c);</span>
+
+<span class="nc" id="L233">            c.gridy = gridy;</span>
+<span class="nc" id="L234">            c.weighty = 1.0;</span>
+<span class="nc" id="L235">            this.accordion.add(new JPanel(), c);</span>
+        }
+<span class="nc" id="L237">        return this.accordion;</span>
+    }
+
+    private Component createAccordionHeader(String name) {
+<span class="nc" id="L241">        GradientPanel panel = new GradientPanel((new JPanel()).getBackground(), (new JPanel()).getBackground().darker());</span>
+<span class="nc" id="L242">        panel.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));</span>
+<span class="nc" id="L243">        panel.setLayout(new GridLayout(1, 1));</span>
+
+<span class="nc" id="L245">        JButton button = new JButton(name);</span>
+<span class="nc" id="L246">        button.setContentAreaFilled(false);</span>
+<span class="nc" id="L247">        button.setOpaque(false);</span>
+<span class="nc" id="L248">        button.setMargin(new Insets(3, 3, 3, 3));</span>
+<span class="nc" id="L249">        button.setFont(button.getFont().deriveFont(Font.BOLD));</span>
+<span class="nc" id="L250">        button.setFocusable(false);</span>
+<span class="nc" id="L251">        panel.add(button);</span>
+
+<span class="nc" id="L253">        return panel;</span>
+    }
+
+    /**
+     * Getter method for embedButton
+     *
+     * @return embedButton
+     */
+    public JToggleButton getEmbedButton() {
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        if (this.embedButton == null) {</span>
+<span class="nc" id="L263">            this.embedButton = new JToggleButton(labelUtil.getString(&quot;gui.label.tab.dhEmbed&quot;),</span>
+<span class="nc" id="L264">                    new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/images/EmbedIcon.png&quot;))), true);</span>
+            if (toggleUiHack) {
+                this.embedButton.setUI(new MetalToggleButtonUI());
+            }
+<span class="nc" id="L268">            this.embedButton.setVerticalTextPosition(SwingConstants.BOTTOM);</span>
+<span class="nc" id="L269">            this.embedButton.setHorizontalTextPosition(SwingConstants.CENTER);</span>
+<span class="nc" id="L270">            this.embedButton.setFocusable(false);</span>
+<span class="nc" id="L271">            this.actionButtonGroup.add(this.embedButton);</span>
+        }
+<span class="nc" id="L273">        return this.embedButton;</span>
+    }
+
+    /**
+     * Getter method for extractButton
+     *
+     * @return extractButton
+     */
+    public JToggleButton getExtractButton() {
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (this.extractButton == null) {</span>
+<span class="nc" id="L283">            this.extractButton = new JToggleButton(labelUtil.getString(&quot;gui.label.tab.dhExtract&quot;),</span>
+<span class="nc" id="L284">                    new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/images/ExtractIcon.png&quot;))));</span>
+            if (toggleUiHack) {
+                this.extractButton.setUI(new MetalToggleButtonUI());
+            }
+<span class="nc" id="L288">            this.extractButton.setVerticalTextPosition(SwingConstants.BOTTOM);</span>
+<span class="nc" id="L289">            this.extractButton.setHorizontalTextPosition(SwingConstants.CENTER);</span>
+<span class="nc" id="L290">            this.extractButton.setFocusable(false);</span>
+<span class="nc" id="L291">            this.actionButtonGroup.add(this.extractButton);</span>
+        }
+<span class="nc" id="L293">        return this.extractButton;</span>
+    }
+
+    /**
+     * Getter method for genSigButton
+     *
+     * @return genSigButton
+     */
+    public JToggleButton getGenSigButton() {
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        if (this.genSigButton == null) {</span>
+<span class="nc" id="L303">            this.genSigButton = new JToggleButton(labelUtil.getString(&quot;gui.label.tab.wmGenSig&quot;),</span>
+<span class="nc" id="L304">                    new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/images/EmbedIcon.png&quot;)))); // TODO</span>
+            if (toggleUiHack) {
+                this.genSigButton.setUI(new MetalToggleButtonUI());
+            }
+<span class="nc" id="L308">            this.genSigButton.setVerticalTextPosition(SwingConstants.BOTTOM);</span>
+<span class="nc" id="L309">            this.genSigButton.setHorizontalTextPosition(SwingConstants.CENTER);</span>
+<span class="nc" id="L310">            this.genSigButton.setFocusable(false);</span>
+<span class="nc" id="L311">            this.actionButtonGroup.add(this.genSigButton);</span>
+        }
+<span class="nc" id="L313">        return this.genSigButton;</span>
+    }
+
+    /**
+     * Getter method for signWmButton
+     *
+     * @return signWmButton
+     */
+    public JToggleButton getSignWmButton() {
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        if (this.signWmButton == null) {</span>
+<span class="nc" id="L323">            this.signWmButton = new JToggleButton(labelUtil.getString(&quot;gui.label.tab.wmEmbed&quot;),</span>
+<span class="nc" id="L324">                    new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/images/EmbedIcon.png&quot;)))); // TODO</span>
+            if (toggleUiHack) {
+                this.signWmButton.setUI(new MetalToggleButtonUI());
+            }
+<span class="nc" id="L328">            this.signWmButton.setVerticalTextPosition(SwingConstants.BOTTOM);</span>
+<span class="nc" id="L329">            this.signWmButton.setHorizontalTextPosition(SwingConstants.CENTER);</span>
+<span class="nc" id="L330">            this.signWmButton.setFocusable(false);</span>
+<span class="nc" id="L331">            this.actionButtonGroup.add(this.signWmButton);</span>
+        }
+<span class="nc" id="L333">        return this.signWmButton;</span>
+    }
+
+    /**
+     * Getter method for verifyWmButton
+     *
+     * @return verifyWmButton
+     */
+    public JToggleButton getVerifyWmButton() {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">        if (this.verifyWmButton == null) {</span>
+<span class="nc" id="L343">            this.verifyWmButton = new JToggleButton(labelUtil.getString(&quot;gui.label.tab.wmVerify&quot;),</span>
+<span class="nc" id="L344">                    new ImageIcon(Objects.requireNonNull(getClass().getResource(&quot;/images/ExtractIcon.png&quot;)))); // TODO</span>
+            if (toggleUiHack) {
+                this.verifyWmButton.setUI(new MetalToggleButtonUI());
+            }
+<span class="nc" id="L348">            this.verifyWmButton.setVerticalTextPosition(SwingConstants.BOTTOM);</span>
+<span class="nc" id="L349">            this.verifyWmButton.setHorizontalTextPosition(SwingConstants.CENTER);</span>
+<span class="nc" id="L350">            this.verifyWmButton.setFocusable(false);</span>
+<span class="nc" id="L351">            this.actionButtonGroup.add(this.verifyWmButton);</span>
+        }
+<span class="nc" id="L353">        return this.verifyWmButton;</span>
+    }
+
+    /**
+     * Getter method for headerPanel
+     *
+     * @return headerPanel
+     */
+    public JPanel getHeaderPanel() {
+<span class="nc bnc" id="L362" title="All 2 branches missed.">        if (this.headerPanel == null) {</span>
+<span class="nc" id="L363">            this.headerPanel = new JPanel();</span>
+<span class="nc" id="L364">            this.headerPanel.setBorder(BorderFactory.createCompoundBorder(</span>
+<span class="nc" id="L365">                    BorderFactory.createMatteBorder(0, 0, 1, 0, Color.DARK_GRAY),</span>
+<span class="nc" id="L366">                    BorderFactory.createEmptyBorder(5, 5, 5, 5)));</span>
+<span class="nc" id="L367">            this.headerPanel.setLayout(new GridLayout());</span>
+<span class="nc" id="L368">            this.headerPanel.add(getHeader());</span>
+        }
+<span class="nc" id="L370">        return this.headerPanel;</span>
+    }
+
+    /**
+     * Getter method for header
+     *
+     * @return header
+     */
+    public JLabel getHeader() {
+<span class="nc bnc" id="L379" title="All 2 branches missed.">        if (this.header == null) {</span>
+<span class="nc" id="L380">            this.header = new JLabel();</span>
+<span class="nc" id="L381">            this.header.setFont(this.header.getFont().deriveFont(Font.BOLD, this.header.getFont().getSize2D() + 3f));</span>
+        }
+<span class="nc" id="L383">        return this.header;</span>
+    }
+
+    /**
+     * Getter method for mainPanel
+     *
+     * @return mainPanel
+     */
+    public JPanel getMainPanel() {
+<span class="nc bnc" id="L392" title="All 2 branches missed.">        if (this.mainPanel == null) {</span>
+<span class="nc" id="L393">            this.mainPanel = new JPanel();</span>
+<span class="nc" id="L394">            this.mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));</span>
+<span class="nc" id="L395">            this.mainPanel.setLayout(new GridLayout());</span>
+        }
+<span class="nc" id="L397">        return this.mainPanel;</span>
+    }
+
+    /**
+     * Getter method for embedPanel
+     *
+     * @return embedPanel
+     */
+    public EmbedPanel getEmbedPanel() {
+<span class="nc bnc" id="L406" title="All 2 branches missed.">        if (this.embedPanel == null) {</span>
+<span class="nc" id="L407">            this.embedPanel = new EmbedPanel(this.dhPlugin.getEmbedOptionsUI(this));</span>
+<span class="nc" id="L408">            this.embedPanel.initialize();</span>
+        }
+<span class="nc" id="L410">        return this.embedPanel;</span>
+    }
+
+    /**
+     * Getter method for extractPanel
+     *
+     * @return extractPanel
+     */
+    public ExtractPanel getExtractPanel() {
+<span class="nc bnc" id="L419" title="All 2 branches missed.">        if (this.extractPanel == null) {</span>
+<span class="nc" id="L420">            this.extractPanel = new ExtractPanel();</span>
+        }
+<span class="nc" id="L422">        return this.extractPanel;</span>
+    }
+
+    /**
+     * Getter method for genSigPanel
+     *
+     * @return genSigPanel
+     */
+    public GenerateSignaturePanel getGenSigPanel() {
+<span class="nc bnc" id="L431" title="All 2 branches missed.">        if (this.genSigPanel == null) {</span>
+<span class="nc" id="L432">            this.genSigPanel = new GenerateSignaturePanel();</span>
+        }
+<span class="nc" id="L434">        return this.genSigPanel;</span>
+    }
+
+    /**
+     * Getter method for embedWmPanel
+     *
+     * @return embedWmPanel
+     */
+    public EmbedWatermarkPanel getEmbedWmPanel() {
+<span class="nc bnc" id="L443" title="All 2 branches missed.">        if (this.embedWmPanel == null) {</span>
+<span class="nc" id="L444">            this.embedWmPanel = new EmbedWatermarkPanel();</span>
+        }
+<span class="nc" id="L446">        return this.embedWmPanel;</span>
+    }
+
+    /**
+     * Getter method for verifyWmPanel
+     *
+     * @return verifyWmPanel
+     */
+    public VerifyWatermarkPanel getVerifyWmPanel() {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">        if (this.verifyWmPanel == null) {</span>
+<span class="nc" id="L456">            this.verifyWmPanel = new VerifyWatermarkPanel();</span>
+        }
+<span class="nc" id="L458">        return this.verifyWmPanel;</span>
+    }
+
+    /**
+     * This method initializes the UI resources like fonts, size, etc.
+     */
+    private void setupUI() {
+        // Special handling to ensure that Japanese fonts are readable
+<span class="nc bnc" id="L466" title="All 2 branches missed.">        if (Locale.getDefault().getLanguage().equals(Locale.JAPANESE.getLanguage())) {</span>
+            Object key;
+            Object value;
+<span class="nc" id="L469">            Enumeration&lt;?&gt; keys = UIManager.getDefaults().keys();</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">            while (keys.hasMoreElements()) {</span>
+<span class="nc" id="L471">                key = keys.nextElement();</span>
+<span class="nc" id="L472">                value = UIManager.get(key);</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">                if (value instanceof FontUIResource) {</span>
+<span class="nc" id="L474">                    UIManager.put(key, ((FontUIResource) value).deriveFont(12.0f));</span>
+                }
+            }
+<span class="nc" id="L477">            getMainContentPane().setFont(new Font(&quot;Japanese&quot;, Font.PLAIN, 12));</span>
+        }
+<span class="nc" id="L479">    }</span>
+
+    /**
+     * This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void initialize() {
+        if (toggleUiHack) {
+            UIManager.put(&quot;ToggleButton.select&quot;, new MetalLookAndFeel().getDefaults().getColor(&quot;ToggleButton.select&quot;).darker());
+        }
+<span class="nc" id="L489">        this.setContentPane(getMainContentPane());</span>
+<span class="nc" id="L490">        this.setTitle(labelUtil.getString(&quot;gui.window.title&quot;));</span>
+<span class="nc" id="L491">        this.setJMenuBar(getTopMenuBar());</span>
+
+<span class="nc" id="L493">        getMainPanel().add(getEmbedPanel());</span>
+<span class="nc" id="L494">        getHeader().setText(labelUtil.getString(&quot;gui.label.panelHeader.dhEmbed&quot;));</span>
+<span class="nc" id="L495">    }</span>
+
+    /**
+     * Method to set the action commands for interactive UI items
+     */
+    private void setActionCommands() {
+<span class="nc" id="L501">        getFileExitMenuItem().setActionCommand(ActionCommands.MENU_FILE_EXIT);</span>
+<span class="nc" id="L502">        getHelpAboutMenuItem().setActionCommand(ActionCommands.MENU_HELP_ABOUT);</span>
+
+<span class="nc" id="L504">        getEmbedButton().setActionCommand(ActionCommands.SWITCH_DH_EMBED);</span>
+<span class="nc" id="L505">        getExtractButton().setActionCommand(ActionCommands.SWITCH_DH_EXTRACT);</span>
+<span class="nc" id="L506">        getGenSigButton().setActionCommand(ActionCommands.SWITCH_WM_GENSIG);</span>
+<span class="nc" id="L507">        getSignWmButton().setActionCommand(ActionCommands.SWITCH_WM_EMBED);</span>
+<span class="nc" id="L508">        getVerifyWmButton().setActionCommand(ActionCommands.SWITCH_WM_VERIFY);</span>
+
+<span class="nc" id="L510">        getEmbedPanel().getMsgFileButton().setActionCommand(ActionCommands.BROWSE_DH_EMB_MSGFILE);</span>
+<span class="nc" id="L511">        getEmbedPanel().getCoverFileButton().setActionCommand(ActionCommands.BROWSE_DH_EMB_CVRFILE);</span>
+<span class="nc" id="L512">        getEmbedPanel().getStegoFileButton().setActionCommand(ActionCommands.BROWSE_DH_EMB_STGFILE);</span>
+<span class="nc" id="L513">        getEmbedPanel().getRunEmbedButton().setActionCommand(ActionCommands.RUN_DH_EMBED);</span>
+
+<span class="nc" id="L515">        getExtractPanel().getInputStegoFileButton().setActionCommand(ActionCommands.BROWSE_DH_EXT_STGFILE);</span>
+<span class="nc" id="L516">        getExtractPanel().getOutputFolderButton().setActionCommand(ActionCommands.BROWSE_DH_EXT_OUTDIR);</span>
+<span class="nc" id="L517">        getExtractPanel().getRunExtractButton().setActionCommand(ActionCommands.RUN_DH_EXTRACT);</span>
+
+<span class="nc" id="L519">        getGenSigPanel().getSignatureFileButton().setActionCommand(ActionCommands.BROWSE_WM_GSG_SIGFILE);</span>
+<span class="nc" id="L520">        getGenSigPanel().getRunGenSigButton().setActionCommand(ActionCommands.RUN_WM_GENSIG);</span>
+
+<span class="nc" id="L522">        getEmbedWmPanel().getFileForWmButton().setActionCommand(ActionCommands.BROWSE_WM_EMB_INPFILE);</span>
+<span class="nc" id="L523">        getEmbedWmPanel().getSignatureFileButton().setActionCommand(ActionCommands.BROWSE_WM_EMB_SIGFILE);</span>
+<span class="nc" id="L524">        getEmbedWmPanel().getOutputWmFileButton().setActionCommand(ActionCommands.BROWSE_WM_EMB_OUTFILE);</span>
+<span class="nc" id="L525">        getEmbedWmPanel().getRunEmbedWmButton().setActionCommand(ActionCommands.RUN_WM_EMBED);</span>
+
+<span class="nc" id="L527">        getVerifyWmPanel().getInputFileButton().setActionCommand(ActionCommands.BROWSE_WM_VER_INPFILE);</span>
+<span class="nc" id="L528">        getVerifyWmPanel().getSignatureFileButton().setActionCommand(ActionCommands.BROWSE_WM_VER_SIGFILE);</span>
+<span class="nc" id="L529">        getVerifyWmPanel().getRunVerifyWmButton().setActionCommand(ActionCommands.RUN_WM_VERIFY);</span>
+<span class="nc" id="L530">    }</span>
+
+    /**
+     * Enumeration for button actions
+     */
+    public interface ActionCommands {
+        /**
+         * Menu - File - Exit
+         */
+        String MENU_FILE_EXIT = &quot;MENU_FILE_EXIT&quot;;
+        /**
+         * Menu - Help - About
+         */
+        String MENU_HELP_ABOUT = &quot;MENU_HELP_ABOUT&quot;;
+
+        /**
+         * Switch to Data Hiding - Embed panel
+         */
+        String SWITCH_DH_EMBED = &quot;SWITCH_DH_EMBED&quot;;
+        /**
+         * Switch to Data Hiding - Extract panel
+         */
+        String SWITCH_DH_EXTRACT = &quot;SWITCH_DH_EXTRACT&quot;;
+        /**
+         * Switch to Watermarking - GenSig panel
+         */
+        String SWITCH_WM_GENSIG = &quot;SWITCH_WM_GENSIG&quot;;
+        /**
+         * Switch to Watermarking - Embed panel
+         */
+        String SWITCH_WM_EMBED = &quot;SWITCH_WM_EMBED&quot;;
+        /**
+         * Switch to Watermarking - Verify panel
+         */
+        String SWITCH_WM_VERIFY = &quot;SWITCH_WM_VERIFY&quot;;
+
+        /**
+         * Browse action for DH-Embed-MessageFile
+         */
+        String BROWSE_DH_EMB_MSGFILE = &quot;BROWSE_DH_EMB_MSGFILE&quot;;
+        /**
+         * Browse action for DH-Embed-CoverFile
+         */
+        String BROWSE_DH_EMB_CVRFILE = &quot;BROWSE_DH_EMB_CVRFILE&quot;;
+        /**
+         * Browse action for DH-Embed-StegoFile
+         */
+        String BROWSE_DH_EMB_STGFILE = &quot;BROWSE_DH_EMB_STGFILE&quot;;
+        /**
+         * Execute DH-Embed
+         */
+        String RUN_DH_EMBED = &quot;RUN_DH_EMBED&quot;;
+
+        /**
+         * Browse action for DH-Extract-StegoFile
+         */
+        String BROWSE_DH_EXT_STGFILE = &quot;BROWSE_DH_EXT_STGFILE&quot;;
+        /**
+         * Browse action for DH-Extract-OutputFolder
+         */
+        String BROWSE_DH_EXT_OUTDIR = &quot;BROWSE_DH_EXT_OUTDIR&quot;;
+        /**
+         * Execute DH-Extract
+         */
+        String RUN_DH_EXTRACT = &quot;RUN_DH_EXTRACT&quot;;
+
+        /**
+         * Browse action for WM-GenSig-SigFile
+         */
+        String BROWSE_WM_GSG_SIGFILE = &quot;BROWSE_WM_GSG_SIGFILE&quot;;
+        /**
+         * Execute WM-GenSig
+         */
+        String RUN_WM_GENSIG = &quot;RUN_WM_GENSIG&quot;;
+
+        /**
+         * Browse action for WM-Embed-InputFile
+         */
+        String BROWSE_WM_EMB_INPFILE = &quot;BROWSE_WM_EMB_INPFILE&quot;;
+        /**
+         * Browse action for WM-Embed-SignatureFile
+         */
+        String BROWSE_WM_EMB_SIGFILE = &quot;BROWSE_WM_EMB_SIGFILE&quot;;
+        /**
+         * Browse action for WM-Embed-OutputFile
+         */
+        String BROWSE_WM_EMB_OUTFILE = &quot;BROWSE_WM_EMB_OUTFILE&quot;;
+        /**
+         * Execute WM-Embed
+         */
+        String RUN_WM_EMBED = &quot;RUN_WM_EMBED&quot;;
+
+        /**
+         * Browse action for WM-Verify-InputFile
+         */
+        String BROWSE_WM_VER_INPFILE = &quot;BROWSE_WM_VER_INPFILE&quot;;
+        /**
+         * Browse action for WM-Verify-SignatureFile
+         */
+        String BROWSE_WM_VER_SIGFILE = &quot;BROWSE_WM_VER_SIGFILE&quot;;
+        /**
+         * Execute WM-Verify
+         */
+        String RUN_WM_VERIFY = &quot;RUN_WM_VERIFY&quot;;
+    }
+
+    static class GradientPanel extends JPanel {
+        private static final long serialVersionUID = 3865918400221647086L;
+        private final Color startColor;
+        private final Color endColor;
+
+        /**
+         * Default constructor
+         *
+         * @param startColor Start of gradient
+         * @param endColor   End of gradient
+         */
+<span class="nc" id="L647">        public GradientPanel(Color startColor, Color endColor) {</span>
+<span class="nc" id="L648">            this.startColor = startColor;</span>
+<span class="nc" id="L649">            this.endColor = endColor;</span>
+<span class="nc" id="L650">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+         */
+        @Override
+        protected void paintComponent(Graphics g) {
+<span class="nc" id="L658">            super.paintComponent(g);</span>
+<span class="nc" id="L659">            int panelHeight = getHeight();</span>
+<span class="nc" id="L660">            int panelWidth = getWidth();</span>
+
+<span class="nc" id="L662">            GradientPaint gradientPaint = new GradientPaint(0, 0, this.startColor, 0, panelHeight, this.endColor);</span>
+<span class="nc bnc" id="L663" title="All 2 branches missed.">            if (g instanceof Graphics2D) {</span>
+<span class="nc" id="L664">                Graphics2D graphics2D = (Graphics2D) g;</span>
+<span class="nc" id="L665">                graphics2D.setPaint(gradientPaint);</span>
+<span class="nc" id="L666">                graphics2D.fillRect(0, 0, panelWidth, panelHeight);</span>
+            }
+<span class="nc" id="L668">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

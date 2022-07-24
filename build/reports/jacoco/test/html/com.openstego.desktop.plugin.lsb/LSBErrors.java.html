@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBErrors.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBErrors.java</span></div><h1>LSBErrors.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoException;
+
+/**
+ * Class to store error codes for LSB plugin
+ */
+<span class="nc" id="L14">public class LSBErrors {</span>
+    /**
+     * Error Code - Error while reading image data
+     */
+    public static final int ERR_IMAGE_DATA_READ = 1;
+
+    /**
+     * Error Code - Null value provided for image
+     */
+    public static final int NULL_IMAGE_ARGUMENT = 2;
+
+    /**
+     * Error Code - Image size insufficient for data
+     */
+    public static final int IMAGE_SIZE_INSUFFICIENT = 3;
+
+    /**
+     * Error Code - maxBitsUsedPerChannel is not a number
+     */
+    public static final int MAX_BITS_NOT_NUMBER = 4;
+
+    /**
+     * Error Code - maxBitsUsedPerChannel is not in valid range
+     */
+    public static final int MAX_BITS_NOT_IN_RANGE = 5;
+
+    /**
+     * Error Code - Invalid stego header data
+     */
+    public static final int INVALID_STEGO_HEADER = 6;
+
+    /**
+     * Error Code - Invalid image header version
+     */
+    public static final int INVALID_HEADER_VERSION = 7;
+
+    /**
+     * Initialize the error code - message key map
+     */
+    public static void init() {
+<span class="fc" id="L54">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, ERR_IMAGE_DATA_READ, &quot;err.image.read&quot;);</span>
+<span class="fc" id="L55">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, NULL_IMAGE_ARGUMENT, &quot;err.image.arg.nullValue&quot;);</span>
+<span class="fc" id="L56">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, IMAGE_SIZE_INSUFFICIENT, &quot;err.image.insufficientSize&quot;);</span>
+<span class="fc" id="L57">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, MAX_BITS_NOT_NUMBER, &quot;err.config.maxBitsUsedPerChannel.notNumber&quot;);</span>
+<span class="fc" id="L58">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, MAX_BITS_NOT_IN_RANGE, &quot;err.config.maxBitsUsedPerChannel.notInRange&quot;);</span>
+<span class="fc" id="L59">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, INVALID_STEGO_HEADER, &quot;err.invalidHeaderStamp&quot;);</span>
+<span class="fc" id="L60">        OpenStegoException.addErrorCode(LSBPlugin.NAMESPACE, INVALID_HEADER_VERSION, &quot;err.invalidHeaderVersion&quot;);</span>
+<span class="fc" id="L61">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

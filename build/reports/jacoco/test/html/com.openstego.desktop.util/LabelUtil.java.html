@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LabelUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util</a> &gt; <span class="el_source">LabelUtil.java</span></div><h1>LabelUtil.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util;
+
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+
+/**
+ * Localized label handler for OpenStego
+ */
+public class LabelUtil {
+    /**
+     * Static variable to hold the map of labels loaded from resource files
+     */
+<span class="fc" id="L22">    private static final Map&lt;String, ResourceBundle&gt; map = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Static variable to store the namespace map
+     */
+<span class="fc" id="L27">    private static final Map&lt;String, LabelUtil&gt; namespaceMap = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Method to add new namespace using resource bundle
+     *
+     * @param namespace Namespace for the labels
+     * @param bundle    Resource bundle name
+     */
+    public static void addNamespace(String namespace, String bundle) {
+<span class="fc" id="L36">        map.put(namespace, ResourceBundle.getBundle(bundle, Locale.getDefault()));</span>
+<span class="fc" id="L37">    }</span>
+
+    /**
+     * Method to get instance of LabelUtil based on the namespace
+     *
+     * @param namespace Namespace for the labels
+     * @return Instance of LabelUtil
+     */
+    public static LabelUtil getInstance(String namespace) {
+        LabelUtil util;
+
+<span class="fc" id="L48">        util = namespaceMap.get(namespace);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (util == null) {</span>
+<span class="fc" id="L50">            util = new LabelUtil(namespace);</span>
+<span class="fc" id="L51">            namespaceMap.put(namespace, util);</span>
+        }
+
+<span class="fc" id="L54">        return util;</span>
+    }
+
+    /**
+     * Variable to store the current namespace
+     */
+    private final String namespace;
+
+    /**
+     * Constructor is protected
+     *
+     * @param namespace Namespace for the label
+     */
+<span class="fc" id="L67">    protected LabelUtil(String namespace) {</span>
+<span class="fc" id="L68">        this.namespace = namespace;</span>
+<span class="fc" id="L69">    }</span>
+
+    /**
+     * Method to get label value for the given label key
+     *
+     * @param key Key for the label
+     * @return Display value for the label
+     */
+    public String getString(String key) {
+<span class="fc" id="L78">        return (map.get(this.namespace)).getString(key);</span>
+    }
+
+    /**
+     * Method to get label value for the given label key (using optional parameters)
+     *
+     * @param key        Key for the label
+     * @param parameters Parameters to pass for a parameterized label
+     * @return Display value for the label
+     */
+    public String getString(String key, Object... parameters) {
+<span class="fc" id="L89">        return MessageFormat.format(getString(key), parameters);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

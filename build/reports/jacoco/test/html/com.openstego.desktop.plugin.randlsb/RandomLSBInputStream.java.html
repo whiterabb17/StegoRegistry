@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RandomLSBInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.randlsb</a> &gt; <span class="el_source">RandomLSBInputStream.java</span></div><h1>RandomLSBInputStream.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.randlsb;
+
+import com.openstego.desktop.OpenStegoConfig;
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.plugin.lsb.LSBDataHeader;
+import com.openstego.desktop.plugin.lsb.LSBErrors;
+import com.openstego.desktop.plugin.lsb.LSBPlugin;
+import com.openstego.desktop.util.ImageHolder;
+import com.openstego.desktop.util.StringUtil;
+
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
+/**
+ * InputStream to read embedded data from image file using Random LSB algorithm
+ */
+public class RandomLSBInputStream extends InputStream {
+    /**
+     * Image data
+     */
+    private final ImageHolder image;
+
+    /**
+     * Data header
+     */
+<span class="fc" id="L34">    private LSBDataHeader dataHeader = null;</span>
+
+    /**
+     * Number of bits used per color channel
+     */
+    private int channelBitsUsed;
+
+    /**
+     * Width of the image
+     */
+    private final int imgWidth;
+
+    /**
+     * Height of the image
+     */
+    private final int imgHeight;
+
+    /**
+     * Configuration data
+     */
+    private final OpenStegoConfig config;
+
+    /**
+     * Array for bits in the image
+     */
+<span class="fc" id="L59">    private final Set&lt;String&gt; bitRead = new HashSet&lt;&gt;();</span>
+
+    /**
+     * Random number generator
+     */
+    private final Random rand;
+
+    /**
+     * Default constructor
+     *
+     * @param image  Image data to be read
+     * @param config Configuration data to use while reading
+     * @throws OpenStegoException Processing issues
+     */
+<span class="fc" id="L73">    public RandomLSBInputStream(ImageHolder image, OpenStegoConfig config) throws OpenStegoException {</span>
+<span class="pc bpc" id="L74" title="2 of 4 branches missed.">        if (image == null || image.getImage() == null) {</span>
+<span class="nc" id="L75">            throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.NULL_IMAGE_ARGUMENT);</span>
+        }
+
+<span class="fc" id="L78">        this.image = image;</span>
+<span class="fc" id="L79">        this.channelBitsUsed = 1;</span>
+<span class="fc" id="L80">        this.config = config;</span>
+
+<span class="fc" id="L82">        this.imgWidth = image.getImage().getWidth();</span>
+<span class="fc" id="L83">        this.imgHeight = image.getImage().getHeight();</span>
+
+        // Initialize random number generator with seed generated using password
+<span class="fc" id="L86">        this.rand = new Random(StringUtil.passwordHash(config.getPassword()));</span>
+<span class="fc" id="L87">        readHeader();</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * Method to read header data from the input stream
+     *
+     * @throws OpenStegoException Processing issues
+     */
+    private void readHeader() throws OpenStegoException {
+<span class="fc" id="L96">        this.dataHeader = new LSBDataHeader(this, this.config);</span>
+<span class="fc" id="L97">        this.channelBitsUsed = this.dataHeader.getChannelBitsUsed();</span>
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * Implementation of &lt;code&gt;InputStream.read()&lt;/code&gt; method
+     *
+     * @return Byte read from the stream
+     */
+    @Override
+    public int read() {
+<span class="fc" id="L107">        byte[] bitSet = new byte[8];</span>
+        int x;
+        int y;
+        int channel;
+        int bit;
+        String key;
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        for (int i = 0; i &lt; 8; i++) {</span>
+            do {
+<span class="fc" id="L116">                x = this.rand.nextInt(this.imgWidth);</span>
+<span class="fc" id="L117">                y = this.rand.nextInt(this.imgHeight);</span>
+<span class="fc" id="L118">                channel = this.rand.nextInt(3);</span>
+<span class="fc" id="L119">                bit = this.rand.nextInt(this.channelBitsUsed);</span>
+<span class="fc" id="L120">                key = x + &quot;_&quot; + y + &quot;_&quot; + channel + &quot;_&quot; + bit;</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            } while (this.bitRead.contains(key));</span>
+<span class="fc" id="L122">            this.bitRead.add(key);</span>
+
+<span class="fc" id="L124">            bitSet[i] = (byte) getPixelBit(x, y, channel, bit);</span>
+        }
+
+<span class="fc" id="L127">        return ((bitSet[0] &lt;&lt; 7) + (bitSet[1] &lt;&lt; 6) + (bitSet[2] &lt;&lt; 5) + (bitSet[3] &lt;&lt; 4) + (bitSet[4] &lt;&lt; 3)</span>
+                + (bitSet[5] &lt;&lt; 2) + (bitSet[6] &lt;&lt; 1) + bitSet[7]);
+    }
+
+    /**
+     * Get method for dataHeader
+     *
+     * @return Data header
+     */
+    public LSBDataHeader getDataHeader() {
+<span class="fc" id="L137">        return this.dataHeader;</span>
+    }
+
+    /**
+     * Gets a particular bit in the image, and puts it into the LSB of an integer.
+     *
+     * @param x       The x position of the pixel on the image
+     * @param y       The y position of the pixel on the image
+     * @param channel The color channel containing the bit
+     * @param bit     The bit position
+     * @return The bit at the given position, as the LSB of an integer
+     */
+    private int getPixelBit(int x, int y, int channel, int bit) {
+<span class="fc" id="L150">        return ((this.image.getImage().getRGB(x, y) &gt;&gt; ((channel * 8) + bit)) &amp; 0x1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

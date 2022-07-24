@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBConfig.java</span></div><h1>LSBConfig.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoConfig;
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.util.cmd.CmdLineOptions;
+
+import java.util.Map;
+
+/**
+ * Class to store configuration data for LSB plugin
+ */
+<span class="pc bpc" id="L18" title="1 of 2 branches missed.">public class LSBConfig extends OpenStegoConfig {</span>
+    /**
+     * Key string for configuration item - maxBitsUsedPerChannel.
+     * &lt;p&gt;
+     * Maximum bits to use per color channel. Allowing for higher number here might degrade the quality of the image in
+     * case the data size is big.
+     */
+    public static final String MAX_BITS_USED_PER_CHANNEL = &quot;maxBitsUsedPerChannel&quot;;
+
+    /**
+     * Maximum bits to use per color channel. Allowing for higher number here might degrade the quality
+     * of the image in case the data size is big.
+     */
+<span class="fc" id="L31">    private int maxBitsUsedPerChannel = 3;</span>
+
+    /**
+     * Converts command line options to Map form
+     *
+     * @param options Command-line options
+     * @return Options in Map form
+     * @throws OpenStegoException Processing issues
+     */
+    @Override
+    protected Map&lt;String, Object&gt; convertCmdLineOptionsToMap(CmdLineOptions options) throws OpenStegoException {
+<span class="nc" id="L42">        Map&lt;String, Object&gt; map = super.convertCmdLineOptionsToMap(options);</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (options.getOption(&quot;-b&quot;) != null) { // maxBitsUsedPerChannel</span>
+<span class="nc" id="L45">            map.put(MAX_BITS_USED_PER_CHANNEL,</span>
+<span class="nc" id="L46">                    options.getIntegerValue(&quot;-b&quot;, LSBPlugin.NAMESPACE, LSBErrors.MAX_BITS_NOT_NUMBER));</span>
+        }
+
+<span class="nc" id="L49">        return map;</span>
+    }
+
+    /**
+     * Processes a configuration item.
+     *
+     * @param key   Configuration item key
+     * @param value Configuration item value
+     */
+    @Override
+    protected void processConfigItem(String key, Object value) throws OpenStegoException {
+<span class="nc" id="L60">        super.processConfigItem(key, value);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (key.equals(MAX_BITS_USED_PER_CHANNEL)) {</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">            assert value instanceof Integer;</span>
+<span class="nc" id="L63">            this.maxBitsUsedPerChannel = (int) value;</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">            if (this.maxBitsUsedPerChannel &lt; 1 || this.maxBitsUsedPerChannel &gt; 8) {</span>
+<span class="nc" id="L65">                throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.MAX_BITS_NOT_IN_RANGE, value);</span>
+            }
+        }
+<span class="nc" id="L68">    }</span>
+
+    /**
+     * Get method for configuration item - maxBitsUsedPerChannel
+     *
+     * @return maxBitsUsedPerChannel
+     */
+    public int getMaxBitsUsedPerChannel() {
+<span class="fc" id="L76">        return this.maxBitsUsedPerChannel;</span>
+    }
+
+    /**
+     * Set method for configuration item - maxBitsUsedPerChannel
+     *
+     * @param maxBitsUsedPerChannel Value to be set
+     */
+    public void setMaxBitsUsedPerChannel(int maxBitsUsedPerChannel) {
+<span class="nc" id="L85">        this.maxBitsUsedPerChannel = maxBitsUsedPerChannel;</span>
+<span class="nc" id="L86">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

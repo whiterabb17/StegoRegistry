@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.openstego.desktop.plugin.randlsb.RandomLSBOutputStreamTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2022-07-24T13:09:36" hostname="DARKORACLE" time="0.082">
+  <properties/>
+  <testcase name="testBestCase()" classname="com.openstego.desktop.plugin.randlsb.RandomLSBOutputStreamTest" time="0.065"/>
+  <testcase name="testImageCapacity()" classname="com.openstego.desktop.plugin.randlsb.RandomLSBOutputStreamTest" time="0.013"/>
+  <testcase name="testNonRGBImage()" classname="com.openstego.desktop.plugin.randlsb.RandomLSBOutputStreamTest" time="0.003"/>
+  <testcase name="testNullImage()" classname="com.openstego.desktop.plugin.randlsb.RandomLSBOutputStreamTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

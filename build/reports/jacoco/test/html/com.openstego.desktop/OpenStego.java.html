@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStego.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStego.java</span></div><h1>OpenStego.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import com.openstego.desktop.ui.OpenStegoUI;
+import com.openstego.desktop.util.*;
+
+import javax.swing.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * This is the main class for OpenStego. It includes the {@link #main(String[])} method which provides the
+ * command line interface for the tool. It also has API methods which can be used by external programs
+ * when using OpenStego as a library.
+ */
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">public class OpenStego {</span>
+
+    /**
+     * Constant for the namespace for labels
+     */
+    public static final String NAMESPACE = &quot;OpenStego&quot;;
+
+    /**
+     * Configuration data
+     */
+    private final OpenStegoConfig config;
+
+    /**
+     * Stego plugin to use for embedding / extracting data
+     */
+    private final OpenStegoPlugin&lt;?&gt; plugin;
+
+    static {
+<span class="fc" id="L42">        LabelUtil.addNamespace(NAMESPACE, &quot;i18n.OpenStegoLabels&quot;);</span>
+<span class="fc" id="L43">        OpenStegoErrors.init();</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Constructor using {@link OpenStegoConfig} object
+     *
+     * @param plugin Stego plugin to use
+     * @param config OpenStegoConfig object with configuration data
+     * @throws OpenStegoException Processing issues
+     */
+<span class="fc" id="L53">    public OpenStego(OpenStegoPlugin&lt;?&gt; plugin, OpenStegoConfig config) throws OpenStegoException {</span>
+        // Plugin is mandatory
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (plugin == null) {</span>
+<span class="fc" id="L56">            throw new OpenStegoException(null, NAMESPACE, OpenStegoErrors.NO_PLUGIN_SPECIFIED);</span>
+        }
+<span class="fc" id="L58">        this.plugin = plugin;</span>
+        // Config is mandatory
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">        assert config != null;</span>
+<span class="fc" id="L61">        this.config = config;</span>
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Method to embed the message data into the cover data
+     *
+     * @param msg           Message data to be embedded
+     * @param msgFileName   Name of the message file
+     * @param cover         Cover data into which message data needs to be embedded
+     * @param coverFileName Name of the cover file
+     * @param stegoFileName Name of the output stego file
+     * @return Stego data containing the embedded message
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] embedData(byte[] msg, String msgFileName, byte[] cover, String coverFileName, String stegoFileName) throws OpenStegoException {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (!this.plugin.getPurposes().contains(OpenStegoPlugin.Purpose.DATA_HIDING)) {</span>
+<span class="fc" id="L77">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_DOES_NOT_SUPPORT_DH);</span>
+        }
+
+        try {
+            // Compress data, if requested
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            if (this.config.isUseCompression()) {</span>
+<span class="fc" id="L83">                try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); GZIPOutputStream zos = new GZIPOutputStream(bos)) {</span>
+<span class="fc" id="L84">                    zos.write(msg);</span>
+<span class="fc" id="L85">                    zos.finish();</span>
+<span class="fc" id="L86">                    zos.flush();</span>
+<span class="fc" id="L87">                    msg = bos.toByteArray();</span>
+                }
+            }
+<span class="fc" id="L90">            String _usingPass = &quot;&quot;;</span>
+            // Encrypt data, if requested
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (this.config.isUseEncryption()) {</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                if (this.config.useRPassword)</span>
+                {
+<span class="nc" id="L95">                    Reg.CheckRegistry(&quot;openSteg&quot;);</span>
+<span class="nc" id="L96">                    _usingPass = Reg._keyValue;</span>
+<span class="nc" id="L97">                    OpenStegoCrypto crypto = new OpenStegoCrypto(_usingPass, this.config.getEncryptionAlgorithm());</span>
+<span class="nc" id="L98">                    msg = crypto.encrypt(msg);</span>
+<span class="nc" id="L99">                }</span>
+                else {
+<span class="fc" id="L101">                    OpenStegoCrypto crypto = new OpenStegoCrypto(this.config.getPassword(), this.config.getEncryptionAlgorithm());</span>
+<span class="fc" id="L102">                    msg = crypto.encrypt(msg);</span>
+                }
+            }
+
+<span class="fc" id="L106">            return this.plugin.embedData(msg, msgFileName, cover, coverFileName, stegoFileName);</span>
+<span class="fc" id="L107">        } catch (OpenStegoException osEx) {</span>
+<span class="fc" id="L108">            throw osEx;</span>
+<span class="fc" id="L109">        } catch (Exception ex) {</span>
+<span class="fc" id="L110">            throw new OpenStegoException(ex);</span>
+        }
+    }
+
+    /**
+     * Method to embed the message data into the cover data (alternate API)
+     *
+     * @param msgFile       File containing the message data to be embedded
+     * @param coverFile     Cover file into which data needs to be embedded
+     * @param stegoFileName Name of the output stego file
+     * @return Stego data containing the embedded message
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] embedData(File msgFile, File coverFile, String stegoFileName) throws OpenStegoException {
+<span class="fc" id="L124">        String filename = null;</span>
+
+        // If no message file is provided, then read the data from stdin
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        try (InputStream is = (msgFile == null ? System.in : new FileInputStream(msgFile))) {</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">            if (msgFile != null) {</span>
+<span class="fc" id="L129">                filename = msgFile.getName();</span>
+            }
+
+<span class="fc" id="L132">            return embedData(CommonUtil.streamToBytes(is), filename,</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                    coverFile == null ? null : CommonUtil.fileToBytes(coverFile),</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">                    coverFile == null ? null : coverFile.getName(), stegoFileName);</span>
+<span class="fc" id="L135">        } catch (IOException ioEx) {</span>
+<span class="fc" id="L136">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to embed the watermark signature data into the cover data
+     *
+     * @param sig           Signature data to be embedded
+     * @param sigFileName   Name of the signature file
+     * @param cover         Cover data into which signature data needs to be embedded
+     * @param coverFileName Name of the cover file
+     * @param stegoFileName Name of the output stego file
+     * @return Stego data containing the embedded signature
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] embedMark(byte[] sig, String sigFileName, byte[] cover, String coverFileName, String stegoFileName) throws OpenStegoException {
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (!this.plugin.getPurposes().contains(OpenStegoPlugin.Purpose.WATERMARKING)) {</span>
+<span class="fc" id="L153">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_DOES_NOT_SUPPORT_WM);</span>
+        }
+
+        try {
+            // No compression and encryption should be done as this is signature data
+<span class="fc" id="L158">            return this.plugin.embedData(sig, sigFileName, cover, coverFileName, stegoFileName);</span>
+<span class="fc" id="L159">        } catch (OpenStegoException osEx) {</span>
+<span class="fc" id="L160">            throw osEx;</span>
+<span class="fc" id="L161">        } catch (Exception ex) {</span>
+<span class="fc" id="L162">            throw new OpenStegoException(ex);</span>
+        }
+    }
+
+    /**
+     * Method to embed the watermark signature data into the cover data (alternate API)
+     *
+     * @param sigFile       File containing the signature data to be embedded
+     * @param coverFile     Cover file into which data needs to be embedded
+     * @param stegoFileName Name of the output stego file
+     * @return Stego data containing the embedded signature
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] embedMark(File sigFile, File coverFile, String stegoFileName) throws OpenStegoException {
+<span class="fc" id="L176">        String filename = null;</span>
+
+        // If no signature file is provided, then read the data from stdin
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        try (InputStream is = (sigFile == null ? System.in : new FileInputStream(sigFile))) {</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">            if (sigFile != null) {</span>
+<span class="fc" id="L181">                filename = sigFile.getName();</span>
+            }
+
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">            return embedMark(CommonUtil.streamToBytes(is), filename, coverFile == null ? null : CommonUtil.fileToBytes(coverFile),</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                    coverFile == null ? null : coverFile.getName(), stegoFileName);</span>
+<span class="fc" id="L186">        } catch (IOException ioEx) {</span>
+<span class="fc" id="L187">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to extract the message data from stego data
+     *
+     * @param stegoData     Stego data from which the message needs to be extracted
+     * @param stegoFileName Name of the stego file
+     * @return Extracted message (List's first element is filename and second element is the message as byte array)
+     * @throws OpenStegoException Processing issues
+     */
+    public List&lt;?&gt; extractData(byte[] stegoData, String stegoFileName) throws OpenStegoException {
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (!this.plugin.getPurposes().contains(OpenStegoPlugin.Purpose.DATA_HIDING)) {</span>
+<span class="fc" id="L201">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_DOES_NOT_SUPPORT_DH);</span>
+        }
+
+        byte[] msg;
+<span class="fc" id="L205">        List&lt;Object&gt; output = new ArrayList&lt;&gt;();</span>
+
+        try {
+            // Add file name as first element of output list
+<span class="fc" id="L209">            output.add(this.plugin.extractMsgFileName(stegoData, stegoFileName));</span>
+<span class="fc" id="L210">            msg = this.plugin.extractData(stegoData, stegoFileName, null);</span>
+
+            // Decrypt data, if required
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            if (this.config.isUseEncryption()) {</span>
+<span class="fc" id="L214">                OpenStegoCrypto crypto = new OpenStegoCrypto(this.config.getPassword(), this.config.getEncryptionAlgorithm());</span>
+<span class="fc" id="L215">                msg = crypto.decrypt(msg);</span>
+            }
+
+            // Decompress data, if required
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (this.config.isUseCompression()) {</span>
+<span class="fc" id="L220">                try (ByteArrayInputStream bis = new ByteArrayInputStream(msg); GZIPInputStream zis = new GZIPInputStream(bis)) {</span>
+<span class="fc" id="L221">                    msg = CommonUtil.streamToBytes(zis);</span>
+<span class="fc" id="L222">                } catch (IOException ioEx) {</span>
+<span class="fc" id="L223">                    throw new OpenStegoException(ioEx, OpenStego.NAMESPACE, OpenStegoErrors.CORRUPT_DATA);</span>
+<span class="fc" id="L224">                }</span>
+            }
+
+            // Add message as second element of output list
+<span class="fc" id="L228">            output.add(msg);</span>
+<span class="fc" id="L229">        } catch (OpenStegoException osEx) {</span>
+<span class="fc" id="L230">            throw osEx;</span>
+<span class="fc" id="L231">        } catch (Exception ex) {</span>
+<span class="fc" id="L232">            throw new OpenStegoException(ex);</span>
+<span class="fc" id="L233">        }</span>
+
+<span class="fc" id="L235">        return output;</span>
+    }
+
+    /**
+     * Method to extract the message data from stego data (alternate API)
+     *
+     * @param stegoFile Stego file from which message needs to be extracted
+     * @return Extracted message (List's first element is filename and second element is the message as byte array)
+     * @throws OpenStegoException Processing issues
+     */
+    public List&lt;?&gt; extractData(File stegoFile) throws OpenStegoException {
+<span class="fc" id="L246">        return extractData(CommonUtil.fileToBytes(stegoFile), stegoFile.getName());</span>
+    }
+
+    /**
+     * Method to check the correlation for the given image and the original signature
+     *
+     * @param stegoData     Stego data containing the watermark
+     * @param stegoFileName Name of the stego file
+     * @param origSigData   Original signature data
+     * @return Correlation
+     * @throws OpenStegoException Processing issues
+     */
+    public double checkMark(byte[] stegoData, String stegoFileName, byte[] origSigData) throws OpenStegoException {
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        if (!this.plugin.getPurposes().contains(OpenStegoPlugin.Purpose.WATERMARKING)) {</span>
+<span class="fc" id="L260">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_DOES_NOT_SUPPORT_WM);</span>
+        }
+
+<span class="fc" id="L263">        double correl = this.plugin.checkMark(stegoData, stegoFileName, origSigData);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (Double.isNaN(correl)) {</span>
+<span class="fc" id="L265">            correl = 0.0;</span>
+        }
+<span class="fc" id="L267">        return correl;</span>
+    }
+
+    /**
+     * Method to check the correlation for the given image and the original signature (alternate API)
+     *
+     * @param stegoFile   Stego file from which watermark needs to be extracted
+     * @param origSigFile Original signature file
+     * @return Correlation
+     * @throws OpenStegoException Processing issues
+     */
+    public double checkMark(File stegoFile, File origSigFile) throws OpenStegoException {
+<span class="fc" id="L279">        return checkMark(CommonUtil.fileToBytes(stegoFile), stegoFile.getName(), CommonUtil.fileToBytes(origSigFile));</span>
+    }
+
+    /**
+     * Method to generate the signature data using the given plugin
+     *
+     * @return Signature data
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] generateSignature() throws OpenStegoException {
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        if (!this.plugin.getPurposes().contains(OpenStegoPlugin.Purpose.WATERMARKING)) {</span>
+<span class="fc" id="L290">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_DOES_NOT_SUPPORT_WM);</span>
+        }
+
+<span class="fc bfc" id="L293" title="All 4 branches covered.">        if (this.config.getPassword() == null || this.config.getPassword().trim().length() == 0) {</span>
+<span class="fc" id="L294">            throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PWD_MANDATORY_FOR_GENSIG);</span>
+        }
+
+<span class="fc" id="L297">        return this.plugin.generateSignature();</span>
+    }
+
+    /**
+     * Method to get difference between original cover file and the stegged file
+     *
+     * @param stegoData     Stego data containing the embedded data
+     * @param stegoFileName Name of the stego file
+     * @param coverData     Original cover data
+     * @param coverFileName Name of the cover file
+     * @param diffFileName  Name of the output difference file
+     * @return Difference data
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] getDiff(byte[] stegoData, String stegoFileName, byte[] coverData, String coverFileName, String diffFileName)
+            throws OpenStegoException {
+<span class="fc" id="L313">        return this.plugin.getDiff(stegoData, stegoFileName, coverData, coverFileName, diffFileName);</span>
+    }
+
+    /**
+     * Method to get difference between original cover file and the stegged file
+     *
+     * @param stegoFile    Stego file containing the embedded data
+     * @param coverFile    Original cover file
+     * @param diffFileName Name of the output difference file
+     * @return Difference data
+     * @throws OpenStegoException Processing issues
+     */
+    public byte[] getDiff(File stegoFile, File coverFile, String diffFileName) throws OpenStegoException {
+<span class="fc" id="L326">        return getDiff(CommonUtil.fileToBytes(stegoFile), stegoFile.getName(), CommonUtil.fileToBytes(coverFile), coverFile.getName(), diffFileName);</span>
+    }
+
+    /**
+     * Get method for configuration data
+     *
+     * @return Configuration data
+     */
+    public OpenStegoConfig getConfig() {
+<span class="fc" id="L335">        return this.config;</span>
+    }
+
+    /**
+     * Main method for calling openstego from command line.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+            // Load the stego plugins
+<span class="nc" id="L346">            PluginManager.loadPlugins();</span>
+            // Initialize preferences
+<span class="nc" id="L348">            UserPreferences.init();</span>
+
+<span class="nc bnc" id="L350" title="All 2 branches missed.">            if (args.length == 0) { // Start GUI</span>
+                try {
+<span class="nc" id="L352">                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</span>
+<span class="nc" id="L353">                } catch (Exception e) {</span>
+                    // Ignore
+<span class="nc" id="L355">                }</span>
+                // Determine default DH and WM plugins
+<span class="nc" id="L357">                OpenStegoPlugin&lt;?&gt; dhPlugin = PluginManager.getPluginByName(&quot;RandomLSB&quot;);</span>
+<span class="nc" id="L358">                OpenStegoPlugin&lt;?&gt; wmPlugin = PluginManager.getPluginByName(&quot;DWTDugad&quot;);</span>
+<span class="nc" id="L359">                new OpenStegoUI(dhPlugin, wmPlugin).setVisible(true);</span>
+<span class="nc" id="L360">            } else {</span>
+<span class="nc" id="L361">                OpenStegoCmd.execute(args);</span>
+            }
+<span class="nc" id="L363">        } catch (OpenStegoException osEx) {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">            if (osEx.getErrorCode() == OpenStegoException.UNHANDLED_EXCEPTION) {</span>
+<span class="nc" id="L365">                osEx.printStackTrace(System.err);</span>
+            } else {
+<span class="nc" id="L367">                System.err.println(osEx.getMessage());</span>
+            }
+<span class="nc" id="L369">        } catch (Exception ex) {</span>
+<span class="nc" id="L370">            ex.printStackTrace(System.err);</span>
+<span class="nc" id="L371">        }</span>
+<span class="nc" id="L372">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

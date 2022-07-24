@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBDataHeader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBDataHeader.java</span></div><h1>LSBDataHeader.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoConfig;
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.util.CommonUtil;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * This class holds the header data for the data that needs to be embedded in the image.
+ * First, the header data gets written inside the image, and then the actual data is written.
+ */
+public class LSBDataHeader {
+    /**
+     * Magic string at the start of the header to identify OpenStego embedded data
+     */
+<span class="fc" id="L24">    public static final byte[] DATA_STAMP = &quot;OPENSTEGO&quot;.getBytes(StandardCharsets.UTF_8);</span>
+
+    /**
+     * Header version to distinguish between various versions of data embedding. This should be changed to next
+     * version, in case the logic of embedding data is changed.
+     */
+<span class="fc" id="L30">    public static final byte[] HEADER_VERSION = new byte[]{(byte) 2};</span>
+
+    /**
+     * Length of the fixed portion of the header
+     */
+    private static final int FIXED_HEADER_LENGTH = 8;
+
+    /**
+     * Length of the encryption algorithm string
+     */
+    private static final int CRYPT_ALGO_LENGTH = 8;
+
+    /**
+     * Length of the data embedded in the image (excluding the header data)
+     */
+    private final int dataLength;
+
+    /**
+     * Number of bits used per color channel for embedding the data
+     */
+    private int channelBitsUsed;
+
+    /**
+     * Name of the file being embedded in the image (as byte array)
+     */
+    private final byte[] fileName;
+
+    /**
+     * OpenStegoConfig instance to hold the configuration data
+     */
+    private final OpenStegoConfig config;
+
+    /**
+     * This constructor should normally be used when writing the data.
+     *
+     * @param dataLength      Length of the data embedded in the image (excluding the header data)
+     * @param channelBitsUsed Number of bits used per color channel for embedding the data
+     * @param fileName        Name of the file of data being embedded
+     * @param config          OpenStegoConfig instance to hold the configuration data
+     */
+<span class="fc" id="L70">    public LSBDataHeader(int dataLength, int channelBitsUsed, String fileName, OpenStegoConfig config) {</span>
+<span class="fc" id="L71">        this.dataLength = dataLength;</span>
+<span class="fc" id="L72">        this.channelBitsUsed = channelBitsUsed;</span>
+<span class="fc" id="L73">        this.config = config;</span>
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (fileName == null) {</span>
+<span class="nc" id="L76">            this.fileName = new byte[0];</span>
+        } else {
+<span class="fc" id="L78">            this.fileName = fileName.getBytes(StandardCharsets.UTF_8);</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * This constructor should be used when reading embedded data from an InputStream.
+     *
+     * @param dataInStream Data input stream containing the embedded data
+     * @param config       OpenStegoConfig instance to hold the configuration data
+     * @throws OpenStegoException Processing issues
+     */
+<span class="fc" id="L89">    public LSBDataHeader(InputStream dataInStream, OpenStegoConfig config) throws OpenStegoException {</span>
+        int stampLen;
+        int versionLen;
+        int fileNameLen;
+        int channelBits;
+        int n;
+        byte[] header;
+        byte[] cryptAlgo;
+        byte[] stamp;
+        byte[] version;
+
+<span class="fc" id="L100">        stampLen = DATA_STAMP.length;</span>
+<span class="fc" id="L101">        versionLen = HEADER_VERSION.length;</span>
+<span class="fc" id="L102">        header = new byte[FIXED_HEADER_LENGTH];</span>
+<span class="fc" id="L103">        cryptAlgo = new byte[CRYPT_ALGO_LENGTH];</span>
+<span class="fc" id="L104">        stamp = new byte[stampLen];</span>
+<span class="fc" id="L105">        version = new byte[versionLen];</span>
+
+        try {
+<span class="fc" id="L108">            n = dataInStream.read(stamp, 0, stampLen);</span>
+<span class="pc bpc" id="L109" title="2 of 4 branches missed.">            if (n == -1 || !(new String(stamp)).equals(new String(DATA_STAMP))) {</span>
+<span class="nc" id="L110">                throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.INVALID_STEGO_HEADER);</span>
+            }
+
+<span class="fc" id="L113">            n = dataInStream.read(version, 0, versionLen);</span>
+<span class="pc bpc" id="L114" title="2 of 4 branches missed.">            if (n == -1 || !(new String(version)).equals(new String(HEADER_VERSION))) {</span>
+<span class="nc" id="L115">                throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.INVALID_HEADER_VERSION);</span>
+            }
+
+<span class="fc" id="L118">            n = dataInStream.read(header, 0, FIXED_HEADER_LENGTH);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (n &lt; FIXED_HEADER_LENGTH) {</span>
+<span class="nc" id="L120">                throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.INVALID_STEGO_HEADER);</span>
+            }
+<span class="fc" id="L122">            this.dataLength = (CommonUtil.byteToInt(header[0]) + (CommonUtil.byteToInt(header[1]) &lt;&lt; 8) + (CommonUtil.byteToInt(header[2]) &lt;&lt; 16)</span>
+<span class="fc" id="L123">                    + (CommonUtil.byteToInt(header[3]) &lt;&lt; 24));</span>
+<span class="fc" id="L124">            channelBits = header[4];</span>
+<span class="fc" id="L125">            fileNameLen = header[5];</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">            config.setUseCompression(header[6] == 1);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            config.setUseEncryption(header[7] == 1);</span>
+
+<span class="fc" id="L129">            n = dataInStream.read(cryptAlgo, 0, CRYPT_ALGO_LENGTH);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if (n &lt; CRYPT_ALGO_LENGTH) {</span>
+<span class="nc" id="L131">                throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.INVALID_STEGO_HEADER);</span>
+            }
+<span class="fc" id="L133">            config.setEncryptionAlgorithm(new String(cryptAlgo).trim());</span>
+
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (fileNameLen == 0) {</span>
+<span class="nc" id="L136">                this.fileName = new byte[0];</span>
+            } else {
+<span class="fc" id="L138">                this.fileName = new byte[fileNameLen];</span>
+<span class="fc" id="L139">                n = dataInStream.read(this.fileName, 0, fileNameLen);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                if (n &lt; fileNameLen) {</span>
+<span class="nc" id="L141">                    throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.INVALID_STEGO_HEADER);</span>
+                }
+            }
+<span class="nc" id="L144">        } catch (OpenStegoException osEx) {</span>
+<span class="nc" id="L145">            throw osEx;</span>
+<span class="nc" id="L146">        } catch (Exception ex) {</span>
+<span class="nc" id="L147">            throw new OpenStegoException(ex);</span>
+<span class="fc" id="L148">        }</span>
+
+<span class="fc" id="L150">        this.channelBitsUsed = channelBits;</span>
+<span class="fc" id="L151">        this.config = config;</span>
+<span class="fc" id="L152">    }</span>
+
+    /**
+     * This method generates the header in the form of byte array based on the parameters provided in the constructor.
+     *
+     * @return Header data
+     */
+    public byte[] getHeaderData() {
+        byte[] out;
+        int stampLen;
+        int versionLen;
+<span class="fc" id="L163">        int currIndex = 0;</span>
+
+<span class="fc" id="L165">        stampLen = DATA_STAMP.length;</span>
+<span class="fc" id="L166">        versionLen = HEADER_VERSION.length;</span>
+<span class="fc" id="L167">        out = new byte[stampLen + versionLen + FIXED_HEADER_LENGTH + CRYPT_ALGO_LENGTH + this.fileName.length];</span>
+
+<span class="fc" id="L169">        System.arraycopy(DATA_STAMP, 0, out, currIndex, stampLen);</span>
+<span class="fc" id="L170">        currIndex += stampLen;</span>
+
+<span class="fc" id="L172">        System.arraycopy(HEADER_VERSION, 0, out, currIndex, versionLen);</span>
+<span class="fc" id="L173">        currIndex += versionLen;</span>
+
+<span class="fc" id="L175">        out[currIndex++] = (byte) ((this.dataLength &amp; 0x000000FF));</span>
+<span class="fc" id="L176">        out[currIndex++] = (byte) ((this.dataLength &amp; 0x0000FF00) &gt;&gt; 8);</span>
+<span class="fc" id="L177">        out[currIndex++] = (byte) ((this.dataLength &amp; 0x00FF0000) &gt;&gt; 16);</span>
+<span class="fc" id="L178">        out[currIndex++] = (byte) ((this.dataLength &amp; 0xFF000000) &gt;&gt; 24);</span>
+<span class="fc" id="L179">        out[currIndex++] = (byte) this.channelBitsUsed;</span>
+<span class="fc" id="L180">        out[currIndex++] = (byte) this.fileName.length;</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        out[currIndex++] = (byte) (this.config.isUseCompression() ? 1 : 0);</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">        out[currIndex++] = (byte) (this.config.isUseEncryption() ? 1 : 0);</span>
+
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">        if (this.config.getEncryptionAlgorithm() != null) {</span>
+<span class="fc" id="L185">            byte[] encAlgo = this.config.getEncryptionAlgorithm().getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L186">            System.arraycopy(encAlgo, 0, out, currIndex, encAlgo.length);</span>
+        }
+<span class="fc" id="L188">        currIndex += CRYPT_ALGO_LENGTH;</span>
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (this.fileName.length &gt; 0) {</span>
+<span class="fc" id="L191">            System.arraycopy(this.fileName, 0, out, currIndex, this.fileName.length);</span>
+            //currIndex += this.fileName.length;
+        }
+
+<span class="fc" id="L195">        return out;</span>
+    }
+
+    /**
+     * Get Method for channelBitsUsed
+     *
+     * @return channelBitsUsed
+     */
+    public int getChannelBitsUsed() {
+<span class="fc" id="L204">        return this.channelBitsUsed;</span>
+    }
+
+    /**
+     * Set Method for channelBitsUsed
+     *
+     * @param channelBitsUsed Value to be set
+     */
+    public void setChannelBitsUsed(int channelBitsUsed) {
+<span class="fc" id="L213">        this.channelBitsUsed = channelBitsUsed;</span>
+<span class="fc" id="L214">    }</span>
+
+    /**
+     * Get Method for dataLength
+     *
+     * @return dataLength
+     */
+    public int getDataLength() {
+<span class="fc" id="L222">        return this.dataLength;</span>
+    }
+
+    /**
+     * Get Method for fileName
+     *
+     * @return fileName
+     */
+    public String getFileName() {
+        String name;
+
+<span class="fc" id="L233">        name = new String(this.fileName, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L234">        return name;</span>
+    }
+
+    /**
+     * Method to get size of the current header
+     *
+     * @return Header size
+     */
+    public int getHeaderSize() {
+<span class="fc" id="L243">        return DATA_STAMP.length + HEADER_VERSION.length + FIXED_HEADER_LENGTH + CRYPT_ALGO_LENGTH + this.fileName.length;</span>
+    }
+
+    /**
+     * Method to get the maximum possible size of the header
+     *
+     * @return Maximum possible header size
+     */
+    public static int getMaxHeaderSize() {
+        // Max file name length assumed to be 256
+<span class="nc" id="L253">        return DATA_STAMP.length + HEADER_VERSION.length + FIXED_HEADER_LENGTH + CRYPT_ALGO_LENGTH + 256;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

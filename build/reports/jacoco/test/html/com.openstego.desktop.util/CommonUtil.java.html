@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util</a> &gt; <span class="el_source">CommonUtil.java</span></div><h1>CommonUtil.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util;
+
+import com.openstego.desktop.OpenStegoException;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.StringTokenizer;
+
+/**
+ * Common utilities for OpenStego
+ */
+public class CommonUtil {
+    /**
+     * Constructor is private so that this class is not instantiated
+     */
+    private CommonUtil() {
+    }
+
+    /**
+     * Method to get byte array data from given InputStream
+     *
+     * @param is InputStream to read
+     * @return Stream data as byte array
+     * @throws OpenStegoException Processing issues
+     */
+    public static byte[] streamToBytes(InputStream is) throws OpenStegoException {
+<span class="fc" id="L37">        final int BUF_SIZE = 512;</span>
+        int bytesRead;
+        byte[] data;
+
+<span class="fc" id="L41">        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {</span>
+<span class="fc" id="L42">            data = new byte[BUF_SIZE];</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            while ((bytesRead = is.read(data, 0, BUF_SIZE)) &gt;= 0) {</span>
+<span class="fc" id="L45">                bos.write(data, 0, bytesRead);</span>
+            }
+
+<span class="fc" id="L48">            return bos.toByteArray();</span>
+<span class="nc" id="L49">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L50">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to get byte array data from given file
+     *
+     * @param file File to read
+     * @return File data as byte array
+     * @throws OpenStegoException Processing issues
+     */
+    public static byte[] fileToBytes(File file) throws OpenStegoException {
+<span class="fc" id="L62">        try (InputStream is = new FileInputStream(file)) {</span>
+<span class="fc" id="L63">            return streamToBytes(is);</span>
+<span class="nc" id="L64">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L65">            throw new OpenStegoException(ioEx);</span>
+        }
+    }
+
+    /**
+     * Method to write file data to disk
+     *
+     * @param fileData File data
+     * @param fileName File name (If this is &lt;code&gt;null&lt;/code&gt;, then data is written to stdout)
+     * @throws OpenStegoException Processing issues
+     */
+    public static void writeFile(byte[] fileData, String fileName) throws OpenStegoException {
+<span class="nc" id="L77">        File file = null;</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (fileName != null) {</span>
+<span class="nc" id="L80">            file = new File(fileName);</span>
+        }
+<span class="nc" id="L82">        writeFile(fileData, file);</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Method to write file data to disk
+     *
+     * @param fileData File data
+     * @param file     File object (If this is &lt;code&gt;null&lt;/code&gt;, then data is written to stdout)
+     * @throws OpenStegoException Processing issues
+     */
+    public static void writeFile(byte[] fileData, File file) throws OpenStegoException {
+        // If file is not provided, then write the data to stdout
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        try (OutputStream os = (file == null ? System.out : new FileOutputStream(file))) {</span>
+<span class="nc" id="L95">            os.write(fileData);</span>
+<span class="nc" id="L96">        } catch (IOException ioEx) {</span>
+<span class="nc" id="L97">            throw new OpenStegoException(ioEx);</span>
+<span class="nc" id="L98">        }</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * Method to enable/disable a Swing JTextField object
+     *
+     * @param textField Swing JTextField object
+     * @param enabled   Flag to indicate whether to enable or disable the object
+     */
+    public static void setEnabled(JTextField textField, boolean enabled) {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (enabled) {</span>
+<span class="nc" id="L109">            textField.setEnabled(true);</span>
+<span class="nc" id="L110">            textField.setBackground(Color.WHITE);</span>
+        } else {
+<span class="nc" id="L112">            textField.setEnabled(false);</span>
+<span class="nc" id="L113">            textField.setBackground(UIManager.getColor(&quot;Panel.background&quot;));</span>
+        }
+<span class="nc" id="L115">    }</span>
+
+    /**
+     * Method to parse a delimiter separated list of files into arraylist of filenames. It supports wildcard characters
+     * &quot;*&quot; and &quot;?&quot; within the filenames.
+     *
+     * @param fileList  Delimiter separated list of filenames
+     * @param delimiter Delimiter for tokenization
+     * @return List of filenames after tokenizing and wildcard expansion
+     */
+    public static List&lt;File&gt; parseFileList(String fileList, String delimiter) {
+        int index;
+        StringTokenizer tokenizer;
+        String fileName;
+        String dirName;
+<span class="nc" id="L130">        List&lt;File&gt; output = new ArrayList&lt;&gt;();</span>
+        File fileDir;
+        File[] arrFile;
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (fileList == null) {</span>
+<span class="nc" id="L135">            return output;</span>
+        }
+
+<span class="nc" id="L138">        tokenizer = new StringTokenizer(fileList, delimiter);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        while (tokenizer.hasMoreTokens()) {</span>
+<span class="nc" id="L140">            fileName = tokenizer.nextToken().trim();</span>
+<span class="nc" id="L141">            index = fileName.lastIndexOf(File.separator);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (index &gt;= 0) {</span>
+<span class="nc" id="L144">                dirName = fileName.substring(0, index);</span>
+<span class="nc" id="L145">                fileName = fileName.substring(index + 1);</span>
+            } else {
+<span class="nc" id="L147">                dirName = &quot;.&quot;;</span>
+            }
+<span class="nc" id="L149">            fileName = replaceWildcards(fileName);</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            fileDir = new File(dirName.equals(&quot;&quot;) ? &quot;.&quot; : dirName);</span>
+<span class="nc" id="L152">            arrFile = fileDir.listFiles(new WildcardFilenameFilter(fileName));</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (arrFile != null) {</span>
+<span class="nc" id="L154">                Collections.addAll(output, arrFile);</span>
+            }
+        }
+
+<span class="nc" id="L158">        return output;</span>
+    }
+
+    /**
+     * Byte to Int converter
+     *
+     * @param b Input byte value
+     * @return Int value
+     */
+    public static int byteToInt(int b) {
+<span class="fc" id="L168">        int i = b;</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (i &lt; 0) {</span>
+<span class="nc" id="L170">            i = i + 256;</span>
+        }
+<span class="fc" id="L172">        return i;</span>
+    }
+
+    /**
+     * Helper method to replace file wildcard characters with Java regexp wildcard chararcters
+     *
+     * @param input Input String
+     * @return String containing modified wildcard characters
+     */
+    private static String replaceWildcards(String input) {
+<span class="nc" id="L182">        StringBuilder buffer = new StringBuilder();</span>
+<span class="nc" id="L183">        char[] chars = input.toCharArray();</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        for (char aChar : chars) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (aChar == '*') {</span>
+<span class="nc" id="L187">                buffer.append(&quot;.*&quot;);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            } else if (aChar == '?') {</span>
+<span class="nc" id="L189">                buffer.append(&quot;.{1}&quot;);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            } else if (&quot;+()^$.{}[]|\\&quot;.indexOf(aChar) != -1) { // Escape rest of the java regexp wildcards</span>
+<span class="nc" id="L191">                buffer.append('\\').append(aChar);</span>
+            } else {
+<span class="nc" id="L193">                buffer.append(aChar);</span>
+            }
+        }
+
+<span class="nc" id="L197">        return buffer.toString();</span>
+    }
+
+    /**
+     * Inner class for wildcard filename filter
+     */
+    static class WildcardFilenameFilter implements FilenameFilter {
+        /**
+         * Variable to hold the filter string
+         */
+        private final String filter;
+
+        /**
+         * Default constructor
+         *
+         * @param filter Filter string
+         */
+<span class="nc" id="L214">        public WildcardFilenameFilter(String filter) {</span>
+<span class="nc" id="L215">            this.filter = filter.toLowerCase();</span>
+<span class="nc" id="L216">        }</span>
+
+        /**
+         * Implementation of &lt;code&gt;accept&lt;/code&gt; method
+         *
+         * @param dir  Directory to traverse
+         * @param name Name of the file
+         * @return Whether file is accepted by the filter or not
+         */
+        @Override
+        public boolean accept(File dir, String name) {
+<span class="nc" id="L227">            return (name.toLowerCase().matches(this.filter));</span>
+        }
+    }
+
+    /**
+     * Returns the floor of the half of the input value
+     *
+     * @param num Input number
+     * @return Floor of the half of the input number
+     */
+    public static int floorHalf(int num) {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if ((num &amp; 1) == 1) {</span>
+<span class="nc" id="L239">            return (num - 1) / 2;</span>
+        } else {
+<span class="nc" id="L241">            return num / 2;</span>
+        }
+    }
+
+    /**
+     * Returns the ceiling of the half of the input value
+     *
+     * @param num Input number
+     * @return Ceiling of the half of the input number
+     */
+    public static int ceilingHalf(int num) {
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if ((num &amp; 1) == 1) {</span>
+<span class="nc" id="L253">            return (num + 1) / 2;</span>
+        } else {
+<span class="nc" id="L255">            return num / 2;</span>
+        }
+    }
+
+    /**
+     * Returns the modulus of the input value (taking care of the sign of the value)
+     *
+     * @param num Input number
+     * @param div Divisor for modulus
+     * @return Modulus of num by div
+     */
+    public static int mod(int num, int div) {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if (num &lt; 0) {</span>
+<span class="nc" id="L268">            return div - (-num % div);</span>
+        } else {
+<span class="nc" id="L270">            return num % div;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

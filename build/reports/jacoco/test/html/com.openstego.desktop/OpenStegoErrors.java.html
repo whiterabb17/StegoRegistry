@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoErrors.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStegoErrors.java</span></div><h1>OpenStegoErrors.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import static com.openstego.desktop.OpenStego.NAMESPACE;
+import static com.openstego.desktop.OpenStegoException.addErrorCode;
+
+/**
+ * Custom exception class for OpenStego
+ */
+<span class="nc" id="L15">public class OpenStegoErrors {</span>
+    /**
+     * Error Code - Invalid password
+     */
+    public static final int INVALID_PASSWORD = 1;
+
+    /**
+     * Error Code - Invalid value for useCompression
+     */
+    public static final int INVALID_USE_COMPR_VALUE = 2;
+
+    /**
+     * Error Code - Invalid value for useEncryption
+     */
+    public static final int INVALID_USE_ENCRYPT_VALUE = 3;
+
+    /**
+     * Error Code - Invalid key name
+     */
+    public static final int INVALID_KEY_NAME = 4;
+
+    /**
+     * Error Code - Corrupt Data
+     */
+    public static final int CORRUPT_DATA = 5;
+
+    /**
+     * Error Code - No valid plugin
+     */
+    public static final int NO_VALID_PLUGIN = 6;
+
+    /**
+     * Error Code - Image type invalid
+     */
+    public static final int IMAGE_TYPE_INVALID = 7;
+
+    /**
+     * Error Code - Image file invalid
+     */
+    public static final int IMAGE_FILE_INVALID = 8;
+
+    /**
+     * Error Code - No plugin specified
+     */
+    public static final int NO_PLUGIN_SPECIFIED = 9;
+
+    /**
+     * Error Code - Plugin does not support watermarking
+     */
+    public static final int PLUGIN_DOES_NOT_SUPPORT_WM = 10;
+
+    /**
+     * Error Code - Plugin not found
+     */
+    public static final int PLUGIN_NOT_FOUND = 11;
+
+    /**
+     * Error Code - Image sizes mismatch
+     */
+    public static final int IMAGE_SIZE_MISMATCH = 12;
+
+    /**
+     * Error Code - Plugin does not support data hiding
+     */
+    public static final int PLUGIN_DOES_NOT_SUPPORT_DH = 14;
+
+    /**
+     * Error Code - Password is mandatory for 'gensig' operation
+     */
+    public static final int PWD_MANDATORY_FOR_GENSIG = 15;
+
+    /**
+     * Error Code - Invalid key name
+     */
+    public static final int INVALID_CRYPT_ALGO = 16;
+
+    /**
+     * Error Code - Invalid integer in user preference file
+     */
+    public static final int USERPREF_INVALID_INT = 17;
+
+    /**
+     * Error Code - Invalid float in user preference file
+     */
+    public static final int USERPREF_INVALID_FLOAT = 18;
+
+    /**
+     * Error Code - Invalid boolean in user preference file
+     */
+    public static final int USERPREF_INVALID_BOOL = 19;
+
+    /**
+     * Initialize the error code - message key map
+     */
+    public static void init() {
+<span class="fc" id="L110">        addErrorCode(NAMESPACE, INVALID_PASSWORD, &quot;err.config.password.invalid&quot;);</span>
+<span class="fc" id="L111">        addErrorCode(NAMESPACE, INVALID_USE_COMPR_VALUE, &quot;err.config.useCompression.invalid&quot;);</span>
+<span class="fc" id="L112">        addErrorCode(NAMESPACE, INVALID_USE_ENCRYPT_VALUE, &quot;err.config.useEncryption.invalid&quot;);</span>
+<span class="fc" id="L113">        addErrorCode(NAMESPACE, INVALID_KEY_NAME, &quot;err.config.invalidKey&quot;);</span>
+<span class="fc" id="L114">        addErrorCode(NAMESPACE, INVALID_CRYPT_ALGO, &quot;err.config.invalidCryptAlgo&quot;);</span>
+<span class="fc" id="L115">        addErrorCode(NAMESPACE, USERPREF_INVALID_INT, &quot;err.userpref.valueNotInteger&quot;);</span>
+<span class="fc" id="L116">        addErrorCode(NAMESPACE, USERPREF_INVALID_FLOAT, &quot;err.userpref.valueNotFloat&quot;);</span>
+<span class="fc" id="L117">        addErrorCode(NAMESPACE, USERPREF_INVALID_BOOL, &quot;err.userpref.valueNotBoolean&quot;);</span>
+<span class="fc" id="L118">        addErrorCode(NAMESPACE, CORRUPT_DATA, &quot;err.corruptData&quot;);</span>
+<span class="fc" id="L119">        addErrorCode(NAMESPACE, NO_VALID_PLUGIN, &quot;err.noValidPlugin&quot;);</span>
+<span class="fc" id="L120">        addErrorCode(NAMESPACE, IMAGE_TYPE_INVALID, &quot;err.image.type.invalid&quot;);</span>
+<span class="fc" id="L121">        addErrorCode(NAMESPACE, IMAGE_FILE_INVALID, &quot;err.image.file.invalid&quot;);</span>
+<span class="fc" id="L122">        addErrorCode(NAMESPACE, NO_PLUGIN_SPECIFIED, &quot;err.plugin.notSpecified&quot;);</span>
+<span class="fc" id="L123">        addErrorCode(NAMESPACE, PLUGIN_DOES_NOT_SUPPORT_WM, &quot;err.plugin.wmNotSupported&quot;);</span>
+<span class="fc" id="L124">        addErrorCode(NAMESPACE, PLUGIN_DOES_NOT_SUPPORT_DH, &quot;err.plugin.dhNotSupported&quot;);</span>
+<span class="fc" id="L125">        addErrorCode(NAMESPACE, PLUGIN_NOT_FOUND, &quot;err.plugin.notFound&quot;);</span>
+<span class="fc" id="L126">        addErrorCode(NAMESPACE, IMAGE_SIZE_MISMATCH, &quot;err.image.size.mismatch&quot;);</span>
+<span class="fc" id="L127">        addErrorCode(NAMESPACE, PWD_MANDATORY_FOR_GENSIG, &quot;err.gensig.pwdMandatory&quot;);</span>
+<span class="fc" id="L128">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LSBInputStream.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.plugin.lsb</a> &gt; <span class="el_source">LSBInputStream.java</span></div><h1>LSBInputStream.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.plugin.lsb;
+
+import com.openstego.desktop.OpenStegoConfig;
+import com.openstego.desktop.OpenStegoException;
+import com.openstego.desktop.util.ImageHolder;
+
+import java.io.InputStream;
+
+/**
+ * InputStream to read embedded data from image file using LSB algorithm
+ */
+public class LSBInputStream extends InputStream {
+    /**
+     * Image data
+     */
+    private final ImageHolder image;
+
+    /**
+     * Data header
+     */
+<span class="nc" id="L27">    private LSBDataHeader dataHeader = null;</span>
+
+    /**
+     * Number of bits used per color channel
+     */
+    private int channelBitsUsed;
+
+    /**
+     * Current x co-ordinate
+     */
+<span class="nc" id="L37">    private int x = 0;</span>
+
+    /**
+     * Current y co-ordinate
+     */
+<span class="nc" id="L42">    private int y = 0;</span>
+
+    /**
+     * Current bit number to be read
+     */
+<span class="nc" id="L47">    private int currBit = 0;</span>
+
+    /**
+     * Width of the image
+     */
+    private final int imgWidth;
+
+    /**
+     * Height of the image
+     */
+    private final int imgHeight;
+
+    /**
+     * Configuration data
+     */
+    private final OpenStegoConfig config;
+
+    /**
+     * Default constructor
+     *
+     * @param image  Image data to be read
+     * @param config Configuration data to use while reading
+     * @throws OpenStegoException Processing issues
+     */
+<span class="nc" id="L71">    public LSBInputStream(ImageHolder image, OpenStegoConfig config) throws OpenStegoException {</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">        if (image == null || image.getImage() == null) {</span>
+<span class="nc" id="L73">            throw new OpenStegoException(null, LSBPlugin.NAMESPACE, LSBErrors.NULL_IMAGE_ARGUMENT);</span>
+        }
+
+<span class="nc" id="L76">        this.image = image;</span>
+<span class="nc" id="L77">        this.channelBitsUsed = 1;</span>
+<span class="nc" id="L78">        this.config = config;</span>
+
+<span class="nc" id="L80">        this.imgWidth = image.getImage().getWidth();</span>
+<span class="nc" id="L81">        this.imgHeight = image.getImage().getHeight();</span>
+<span class="nc" id="L82">        readHeader();</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Method to read header data from the input stream
+     *
+     * @throws OpenStegoException Processing issues
+     */
+    private void readHeader() throws OpenStegoException {
+<span class="nc" id="L91">        this.dataHeader = new LSBDataHeader(this, this.config);</span>
+<span class="nc" id="L92">        this.channelBitsUsed = this.dataHeader.getChannelBitsUsed();</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (this.currBit != 0) {</span>
+<span class="nc" id="L95">            this.currBit = 0;</span>
+<span class="nc" id="L96">            this.x++;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (this.x == this.imgWidth) {</span>
+<span class="nc" id="L98">                this.x = 0;</span>
+<span class="nc" id="L99">                this.y++;</span>
+            }
+        }
+<span class="nc" id="L102">    }</span>
+
+    /**
+     * Implementation of &lt;code&gt;InputStream.read()&lt;/code&gt; method
+     *
+     * @return Byte read from the stream
+     */
+    @Override
+    public int read() {
+        int pixel;
+<span class="nc" id="L112">        byte[] bitSet = new byte[8];</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (this.y == this.imgHeight) {</span>
+<span class="nc" id="L115">            return -1;</span>
+        }
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        for (int i = 0; i &lt; bitSet.length; i++) {</span>
+<span class="nc" id="L119">            pixel = this.image.getImage().getRGB(this.x, this.y);</span>
+<span class="nc" id="L120">            bitSet[i] = getCurrBitFromPixel(pixel);</span>
+
+<span class="nc" id="L122">            this.currBit++;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (this.currBit == (3 * this.channelBitsUsed)) {</span>
+<span class="nc" id="L124">                this.currBit = 0;</span>
+<span class="nc" id="L125">                this.x++;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                if (this.x == this.imgWidth) {</span>
+<span class="nc" id="L127">                    this.x = 0;</span>
+<span class="nc" id="L128">                    this.y++;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">                    if (this.y == this.imgHeight) {</span>
+<span class="nc" id="L130">                        return -1;</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L135">        return ((bitSet[0] &lt;&lt; 7) + (bitSet[1] &lt;&lt; 6) + (bitSet[2] &lt;&lt; 5) + (bitSet[3] &lt;&lt; 4) + (bitSet[4] &lt;&lt; 3)</span>
+                + (bitSet[5] &lt;&lt; 2) + (bitSet[6] &lt;&lt; 1) + bitSet[7]);
+    }
+
+    /**
+     * Get method for dataHeader
+     *
+     * @return Data header
+     */
+    public LSBDataHeader getDataHeader() {
+<span class="nc" id="L145">        return this.dataHeader;</span>
+    }
+
+    /**
+     * Gets the bit from pixel based on the current bit
+     *
+     * @param pixel Pixel value
+     * @return Bit
+     */
+    private byte getCurrBitFromPixel(int pixel) {
+        int group;
+        int groupBit;
+
+<span class="nc" id="L158">        group = this.currBit / this.channelBitsUsed;</span>
+<span class="nc" id="L159">        groupBit = this.currBit % this.channelBitsUsed;</span>
+
+<span class="nc" id="L161">        return (byte) (((pixel &gt;&gt; (16 - (group * 8))) &gt;&gt; (this.channelBitsUsed - groupBit - 1)) &amp; 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

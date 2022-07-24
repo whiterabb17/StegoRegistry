@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.openstego.desktop.OpenStegoTest" tests="21" skipped="0" failures="0" errors="0" timestamp="2022-07-24T13:09:35" hostname="DARKORACLE" time="1.272">
+  <properties/>
+  <testcase name="testEmbedDataFile()" classname="com.openstego.desktop.OpenStegoTest" time="1.099"/>
+  <testcase name="testCheckMark_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.007"/>
+  <testcase name="testEmbedData_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.008"/>
+  <testcase name="testEmbedDataFile_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.002"/>
+  <testcase name="testEmbedData()" classname="com.openstego.desktop.OpenStegoTest" time="0.004"/>
+  <testcase name="testEmbedMark()" classname="com.openstego.desktop.OpenStegoTest" time="0.003"/>
+  <testcase name="testGetDiff()" classname="com.openstego.desktop.OpenStegoTest" time="0.006"/>
+  <testcase name="testCheckMarkFile()" classname="com.openstego.desktop.OpenStegoTest" time="0.013"/>
+  <testcase name="testExtractData_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.007"/>
+  <testcase name="testEmbedData_withCompressionAndEncryption()" classname="com.openstego.desktop.OpenStegoTest" time="0.059"/>
+  <testcase name="testEmbedMarkFile()" classname="com.openstego.desktop.OpenStegoTest" time="0.009"/>
+  <testcase name="testCGenerateSignature_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.003"/>
+  <testcase name="testCheckMark()" classname="com.openstego.desktop.OpenStegoTest" time="0.005"/>
+  <testcase name="testExtractData()" classname="com.openstego.desktop.OpenStegoTest" time="0.002"/>
+  <testcase name="testExtractDataFile()" classname="com.openstego.desktop.OpenStegoTest" time="0.006"/>
+  <testcase name="testGetDiffFile()" classname="com.openstego.desktop.OpenStegoTest" time="0.006"/>
+  <testcase name="testEmbedMarkFile_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.002"/>
+  <testcase name="testEmbedMark_exception()" classname="com.openstego.desktop.OpenStegoTest" time="0.005"/>
+  <testcase name="testExtractData_withCompressionAndEncryption()" classname="com.openstego.desktop.OpenStegoTest" time="0.008"/>
+  <testcase name="testCGenerateSignature()" classname="com.openstego.desktop.OpenStegoTest" time="0.001"/>
+  <testcase name="testConstructor()" classname="com.openstego.desktop.OpenStegoTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

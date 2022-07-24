@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CmdLineOption.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util.cmd</a> &gt; <span class="el_source">CmdLineOption.java</span></div><h1>CmdLineOption.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util.cmd;
+
+/**
+ * Stores the master information about a command line option
+ *
+ * @see CmdLineParser
+ */
+public class CmdLineOption {
+    /**
+     * Command-line option type: COMMAND
+     */
+    public static final int TYPE_COMMAND = 0;
+
+    /**
+     * Command-line option type: OPTION
+     */
+    public static final int TYPE_OPTION = 1;
+
+    /**
+     * Name of the option
+     */
+    private final String name;
+
+    /**
+     * Alternate name of the option
+     */
+    private final String altName;
+
+    /**
+     * Type of the option
+     */
+    private final int type;
+
+    /**
+     * Flag to indicate whether the option takes argument or not
+     */
+    private final boolean takesArgVal;
+
+    /**
+     * Value of the option
+     */
+<span class="nc" id="L48">    private String value = null;</span>
+
+    /**
+     * Default constructor
+     *
+     * @param name        Name of the option
+     * @param altName     Alternate name of the option
+     * @param type        Type of the option
+     * @param takesArgVal Flag to indicate whether the option takes argument or not
+     * @throws IllegalArgumentException If option type is TYPE_COMMAND and takesArgVal is specified as true
+     */
+<span class="nc" id="L59">    public CmdLineOption(String name, String altName, int type, boolean takesArgVal) throws IllegalArgumentException {</span>
+<span class="nc" id="L60">        this.name = name;</span>
+<span class="nc" id="L61">        this.altName = altName;</span>
+<span class="nc" id="L62">        this.type = type;</span>
+<span class="nc" id="L63">        this.takesArgVal = takesArgVal;</span>
+
+<span class="nc bnc" id="L65" title="All 4 branches missed.">        if (type == TYPE_COMMAND &amp;&amp; takesArgVal) {</span>
+<span class="nc" id="L66">            throw new IllegalArgumentException();</span>
+        }
+<span class="nc" id="L68">    }</span>
+
+    /**
+     * Set method for value
+     *
+     * @param value Value
+     */
+    public void setValue(String value) {
+<span class="nc" id="L76">        this.value = value;</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * Get method for name
+     *
+     * @return name
+     */
+    public String getName() {
+<span class="nc" id="L85">        return this.name;</span>
+    }
+
+    /**
+     * Get method for altName
+     *
+     * @return altN
+     */
+    public String getAltName() {
+<span class="nc" id="L94">        return this.altName;</span>
+    }
+
+    /**
+     * Get method for type
+     *
+     * @return type
+     */
+    public int getType() {
+<span class="nc" id="L103">        return this.type;</span>
+    }
+
+    /**
+     * Get method for takesArgVal
+     *
+     * @return takesArgVal
+     */
+    public boolean takesArg() {
+<span class="nc" id="L112">        return this.takesArgVal;</span>
+    }
+
+    /**
+     * Get method for value
+     *
+     * @return value
+     */
+    public String getValue() {
+<span class="nc" id="L121">        return this.value;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

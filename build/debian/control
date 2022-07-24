@@ -1,0 +1,13 @@
+Source: openstego
+Section: utils
+Priority: optional
+Maintainer: Samir Vaidya (syvaidya@gmail.com)
+Uploaders: 
+Version: 0.8.4-1
+Standards-Version: 3.8.3
+Package: openstego
+Homepage: https://www.openstego.com
+Architecture: all
+Distribution: 
+Depends: default-jre | java8-runtime
+Description: OpenStego

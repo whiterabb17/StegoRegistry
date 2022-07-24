@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CmdLineOptions.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop.util.cmd</a> &gt; <span class="el_source">CmdLineOptions.java</span></div><h1>CmdLineOptions.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop.util.cmd;
+
+import com.openstego.desktop.OpenStegoException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Class to store the list of command line options
+ *
+ * @see CmdLineParser
+ */
+public class CmdLineOptions {
+    /**
+     * Map to store the standard command-line options
+     */
+<span class="nc" id="L25">    private final Map&lt;String, CmdLineOption&gt; map = new HashMap&lt;&gt;();</span>
+
+    /**
+     * List to store the standard command-line options
+     */
+<span class="nc" id="L30">    private final List&lt;CmdLineOption&gt; list = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Default constructor
+     */
+<span class="nc" id="L35">    public CmdLineOptions() {</span>
+<span class="nc" id="L36">    }</span>
+
+    /**
+     * Method to add the command-line option
+     *
+     * @param option Command-line option
+     */
+    public void add(CmdLineOption option) {
+<span class="nc" id="L44">        this.map.put(option.getName(), option);</span>
+<span class="nc" id="L45">        this.list.add(option);</span>
+
+        // Put reference by alternate name too
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (option.getAltName() != null) {</span>
+<span class="nc" id="L49">            this.map.put(option.getAltName(), option);</span>
+        }
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Overloaded method to add the command-line option
+     *
+     * @param name     Name of the option
+     * @param altName  Alternate name of the option
+     * @param type     Type of the option
+     * @param takesArg Flag to indicate whether the option takes argument or not
+     */
+    public void add(String name, String altName, int type, boolean takesArg) {
+<span class="nc" id="L62">        add(new CmdLineOption(name, altName, type, takesArg));</span>
+<span class="nc" id="L63">    }</span>
+
+    /**
+     * Method to get the standard option data by name
+     *
+     * @param name Name of the option
+     * @return Command-line option
+     */
+    public CmdLineOption getOption(String name) {
+<span class="nc" id="L72">        return this.map.get(name);</span>
+    }
+
+    /**
+     * Method to get the standard option data by index
+     *
+     * @param index Index of the option
+     * @return Command-line option
+     */
+    public CmdLineOption getOption(int index) {
+<span class="nc" id="L82">        return this.list.get(index);</span>
+    }
+
+    /**
+     * Method to get the value of the given option as String
+     *
+     * @param name Name of the option
+     * @return Value of the command-line option
+     */
+    public String getStringValue(String name) {
+<span class="nc" id="L92">        CmdLineOption option = getOption(name);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        return (option == null) ? null : option.getValue().trim();</span>
+    }
+
+    /**
+     * Method to get the value of the given option as integer
+     *
+     * @param name         Name of the option
+     * @param errNamespace Namespace to be used for exception in case of parsing error
+     * @param errCode      Error code to be used for exception in case of parsing error
+     * @return null if options is not present on command line, else integer value
+     * @throws OpenStegoException If value is provided but not an integer
+     */
+    public Integer getIntegerValue(String name, String errNamespace, int errCode) throws OpenStegoException {
+<span class="nc" id="L106">        String val = getStringValue(name);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (val == null) {</span>
+<span class="nc" id="L108">            return null;</span>
+        }
+
+        try {
+<span class="nc" id="L112">            return Integer.parseInt(val);</span>
+<span class="nc" id="L113">        } catch (NumberFormatException nfEx) {</span>
+<span class="nc" id="L114">            throw new OpenStegoException(nfEx, errNamespace, errCode, val);</span>
+        }
+    }
+
+    /**
+     * Method to get the value of the given option as boolean. All boolean-y values like true, false, t, f, yes, no,
+     * y, n, 1, 0 are allowed (case insensitive)
+     *
+     * @param name         Name of the option
+     * @param errNamespace Namespace to be used for exception in case of parsing error
+     * @param errCode      Error code to be used for exception in case of parsing error
+     * @return null if options is not present on command line, else boolean value
+     * @throws OpenStegoException If value is provided but not boolean-y
+     */
+    @SuppressWarnings(&quot;unused&quot;)
+    public Boolean getBooleanValue(String name, String errNamespace, int errCode) throws OpenStegoException {
+<span class="nc" id="L130">        String val = getStringValue(name);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (val == null) {</span>
+<span class="nc" id="L132">            return null;</span>
+        }
+
+<span class="nc" id="L135">        val = val.toLowerCase();</span>
+<span class="nc bnc" id="L136" title="All 10 branches missed.">        if (&quot;t&quot;.equals(val) || &quot;true&quot;.equals(val) || &quot;y&quot;.equals(val) || &quot;yes&quot;.equals(val) || &quot;1&quot;.equals(val)) {</span>
+<span class="nc" id="L137">            return true;</span>
+<span class="nc bnc" id="L138" title="All 10 branches missed.">        } else if (&quot;f&quot;.equals(val) || &quot;false&quot;.equals(val) || &quot;n&quot;.equals(val) || &quot;no&quot;.equals(val) || &quot;0&quot;.equals(val)) {</span>
+<span class="nc" id="L139">            return false;</span>
+        } else {
+<span class="nc" id="L141">            throw new OpenStegoException(null, errNamespace, errCode, val);</span>
+        }
+    }
+
+    /**
+     * Method to get the list of the given options
+     *
+     * @return List of options
+     */
+    public List&lt;CmdLineOption&gt; getList() {
+<span class="nc" id="L151">        return this.list;</span>
+    }
+
+    /**
+     * Method to get the number of the given options
+     *
+     * @return Number of options
+     */
+    public int size() {
+<span class="nc" id="L160">        return this.list.size();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

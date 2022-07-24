@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStegoConfig.java</span></div><h1>OpenStegoConfig.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import com.openstego.desktop.util.cmd.CmdLineOptions;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Class to store configuration data for OpenStego
+ */
+<span class="pc bpc" id="L17" title="1 of 2 branches missed.">public class OpenStegoConfig {</span>
+    /**
+     * Key string for configuration item - useCompression
+     * &lt;p&gt;
+     * Flag to indicate whether compression should be used or not
+     */
+    public static final String USE_COMPRESSION = &quot;useCompression&quot;;
+
+    /**
+     * Key string for configuration item - useEncryption
+     * &lt;p&gt;
+     * Flag to indicate whether encryption should be used or not
+     */
+    public static final String USE_ENCRYPTION = &quot;useEncryption&quot;;
+
+    /**
+     * Key string for configuration item - password
+     * &lt;p&gt;
+     * Password for encryption in case &quot;useEncryption&quot; is set to true
+     */
+    public static final String PASSWORD = &quot;password&quot;;
+    /**
+     * Key string for configuration item - encryptionAlgorithm
+     * &lt;p&gt;
+     * Algorithm to be used for encryption
+     */
+    public static final String ENCRYPTION_ALGORITHM = &quot;encryptionAlgorithm&quot;;
+
+    /**
+     * Flag to indicate whether compression should be used or not
+     */
+<span class="fc" id="L48">    private boolean useCompression = true;</span>
+
+    /**
+     * Flag to indicate whether encryption should be used or not
+     */
+<span class="fc" id="L53">    private boolean useEncryption = false;</span>
+<span class="fc" id="L54">    boolean useRPassword = false;</span>
+    /**
+     * Password for encryption in case &quot;useEncryption&quot; is set to true
+     */
+<span class="fc" id="L58">    private String password = null;</span>
+
+    /**
+     * Algorithm to be used for encryption in case &quot;useEncryption&quot; is set to true
+     */
+<span class="fc" id="L63">    private String encryptionAlgorithm = OpenStegoCrypto.ALGO_AES128;</span>
+
+    /**
+     * Initialize the configuration with map data. Please make sure that only valid keys for configuration items are
+     * provided, and the values for those items are also valid.
+     *
+     * @param propMap Map containing the configuration data
+     * @throws OpenStegoException Processing issues
+     */
+    public final void initialize(Map&lt;String, Object&gt; propMap) throws OpenStegoException {
+<span class="nc" id="L73">        addProperties(propMap);</span>
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * Initialize the configuration from command-line options.
+     *
+     * @param options Command-line options
+     * @throws OpenStegoException Processing issues
+     */
+    public final void initialize(CmdLineOptions options) throws OpenStegoException {
+<span class="nc" id="L83">        addProperties(convertCmdLineOptionsToMap(options));</span>
+<span class="nc" id="L84">    }</span>
+
+    /**
+     * Converts command line options to Map form
+     *
+     * @param options Command-line options
+     * @return Options in Map form
+     * @throws OpenStegoException Processing issues
+     */
+    protected Map&lt;String, Object&gt; convertCmdLineOptionsToMap(CmdLineOptions options) throws OpenStegoException {
+<span class="nc" id="L94">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (options.getOption(&quot;-c&quot;) != null) { // compress</span>
+<span class="nc" id="L97">            map.put(USE_COMPRESSION, true);</span>
+        }
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (options.getOption(&quot;-C&quot;) != null) { // nocompress</span>
+<span class="nc" id="L101">            map.put(USE_COMPRESSION, false);</span>
+        }
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (options.getOption(&quot;-e&quot;) != null) { // encrypt</span>
+<span class="nc" id="L105">            map.put(USE_ENCRYPTION, true);</span>
+        }
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (options.getOption(&quot;-E&quot;) != null) { // noencrypt</span>
+<span class="nc" id="L109">            map.put(USE_ENCRYPTION, false);</span>
+        }
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (options.getOption(&quot;-p&quot;) != null) { // password</span>
+<span class="nc" id="L113">            map.put(PASSWORD, options.getStringValue(&quot;-p&quot;));</span>
+        }
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (options.getOption(&quot;-A&quot;) != null) { // cryptalgo</span>
+<span class="nc" id="L117">            map.put(ENCRYPTION_ALGORITHM, options.getStringValue(&quot;-A&quot;));</span>
+        }
+
+<span class="nc" id="L120">        return map;</span>
+    }
+
+    /**
+     * Processes a configuration item.
+     *
+     * @param key   Configuration item key
+     * @param value Configuration item value
+     * @throws OpenStegoException Processing issues
+     */
+    protected void processConfigItem(String key, Object value) throws OpenStegoException {
+<span class="nc bnc" id="L131" title="All 5 branches missed.">        switch (key) {</span>
+            case USE_COMPRESSION:
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                if (value != null) {</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">                    assert value instanceof Boolean;</span>
+<span class="nc" id="L135">                    this.useCompression = (boolean) value;</span>
+                }
+                break;
+            case USE_ENCRYPTION:
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                if (value != null) {</span>
+<span class="nc bnc" id="L140" title="All 4 branches missed.">                    assert value instanceof Boolean;</span>
+<span class="nc" id="L141">                    this.useEncryption = (boolean) value;</span>
+                }
+                break;
+            case PASSWORD:
+<span class="nc bnc" id="L145" title="All 4 branches missed.">                assert value instanceof String;</span>
+<span class="nc" id="L146">                this.password = (String) value;</span>
+<span class="nc" id="L147">                break;</span>
+            case ENCRYPTION_ALGORITHM:
+<span class="nc bnc" id="L149" title="All 4 branches missed.">                assert value instanceof String;</span>
+<span class="nc" id="L150">                this.encryptionAlgorithm = (String) value;</span>
+                break;
+        }
+<span class="nc" id="L153">    }</span>
+
+    /**
+     * Method to add properties from the map to this configuration data
+     *
+     * @param propMap Map containing the configuration data
+     * @throws OpenStegoException Processing issues
+     */
+    private void addProperties(Map&lt;String, Object&gt; propMap) throws OpenStegoException {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        for (Map.Entry&lt;String, Object&gt; entry : propMap.entrySet()) {</span>
+<span class="nc" id="L163">            processConfigItem(entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L164">        }</span>
+<span class="nc" id="L165">    }</span>
+
+    /**
+     * Get method for configuration item - useCompression
+     *
+     * @return useCompression
+     */
+    public boolean isUseCompression() {
+<span class="fc" id="L173">        return this.useCompression;</span>
+    }
+
+    /**
+     * Set method for configuration item - useCompression
+     *
+     * @param useCompression Value to be set
+     */
+    public void setUseCompression(boolean useCompression) {
+<span class="fc" id="L182">        this.useCompression = useCompression;</span>
+<span class="fc" id="L183">    }</span>
+
+    /**
+     * Get Method for useEncryption
+     *
+     * @return useEncryption
+     */
+    public boolean isUseEncryption() {
+<span class="fc" id="L191">        return this.useEncryption;</span>
+    }
+
+    /**
+     * Set Method for useEncryption
+     *
+     * @param useEncryption Value to be set
+     */
+    public void setUseEncryption(boolean useEncryption) {
+<span class="fc" id="L200">        this.useEncryption = useEncryption;</span>
+<span class="fc" id="L201">    }</span>
+
+    /**
+     * Get Method for password
+     *
+     * @return password
+     */
+    public String getPassword() {
+<span class="fc" id="L209">        return this.password;</span>
+    }
+
+    /**
+     * Set Method for password
+     *
+     * @param password Value to be set
+     */
+    public void setPassword(String password) {
+<span class="fc" id="L218">        this.password = password;</span>
+<span class="fc" id="L219">    }</span>
+
+    /**
+     * Get Method for encryptionAlgorithm
+     *
+     * @return encryptionAlgorithm
+     */
+    public String getEncryptionAlgorithm() {
+<span class="fc" id="L227">        return this.encryptionAlgorithm;</span>
+    }
+
+    /**
+     * Set Method for encryptionAlgorithm
+     *
+     * @param encryptionAlgorithm Value to be set
+     */
+    public void setEncryptionAlgorithm(String encryptionAlgorithm) {
+<span class="fc" id="L236">        this.encryptionAlgorithm = encryptionAlgorithm;</span>
+<span class="fc" id="L237">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

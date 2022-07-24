@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataHidingPlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">DataHidingPlugin.java</span></div><h1>DataHidingPlugin.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Abstract class for stego plugins for OpenStego purpose of which is data hiding. It implements few methods which are
+ * specific for data hiding, and provides dummy implementation for the methods which are specific to watermarking
+ * purposes so that sub-class does not need to implement them
+ *
+ * @see WatermarkingPlugin
+ */
+<span class="fc" id="L19">public abstract class DataHidingPlugin&lt;C extends OpenStegoConfig&gt; extends OpenStegoPlugin&lt;C&gt; {</span>
+    // ------------- Metadata Methods -------------
+
+    /**
+     * Gives the purpose(s) of the plugin. This implementation returns only one value - Data Hiding
+     *
+     * @return Purpose(s) of the plugin
+     */
+    @Override
+    public final List&lt;Purpose&gt; getPurposes() {
+<span class="nc" id="L29">        List&lt;Purpose&gt; purposes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L30">        purposes.add(Purpose.DATA_HIDING);</span>
+<span class="nc" id="L31">        return purposes;</span>
+    }
+
+    // ------------- Core Stego Methods -------------
+
+    /**
+     * Method to generate the signature data. This implementation returns &lt;code&gt;null&lt;/code&gt; as this class is for data
+     * hiding plugins only
+     *
+     * @return Signature data
+     */
+    @Override
+    public final byte[] generateSignature() {
+<span class="nc" id="L44">        return null;</span>
+    }
+
+    /**
+     * Method to check the correlation between original signature and the extracted watermark. This implementation
+     * returns &lt;code&gt;0.0&lt;/code&gt; as this class is for data hiding plugins only
+     *
+     * @param origSigData   Original signature data
+     * @param watermarkData Extracted watermark data
+     * @return Correlation
+     */
+    @Override
+    public final double getWatermarkCorrelation(byte[] origSigData, byte[] watermarkData) {
+<span class="nc" id="L57">        return 0.0;</span>
+    }
+
+    /**
+     * Method to get correlation value which above which it can be considered that watermark strength is high
+     *
+     * @return High watermark
+     */
+    @Override
+    public double getHighWatermarkLevel() {
+<span class="nc" id="L67">        return 0;</span>
+    }
+
+    /**
+     * Method to get correlation value which below which it can be considered that watermark strength is low
+     *
+     * @return Low watermark
+     */
+    @Override
+    public double getLowWatermarkLevel() {
+<span class="nc" id="L77">        return 0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

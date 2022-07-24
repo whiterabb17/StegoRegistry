@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenStegoCmd.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">openstego</a> &gt; <a href="index.source.html" class="el_package">com.openstego.desktop</a> &gt; <span class="el_source">OpenStegoCmd.java</span></div><h1>OpenStegoCmd.java</h1><pre class="source lang-java linenums">/*
+ * Steganography utility to hide messages into cover files
+ * Author: Samir Vaidya (mailto:syvaidya@gmail.com)
+ * Copyright (c) Samir Vaidya
+ */
+
+package com.openstego.desktop;
+
+import com.openstego.desktop.util.CommonUtil;
+import com.openstego.desktop.util.LabelUtil;
+import com.openstego.desktop.util.PluginManager;
+import com.openstego.desktop.util.cmd.CmdLineOption;
+import com.openstego.desktop.util.cmd.CmdLineOptions;
+import com.openstego.desktop.util.cmd.CmdLineParser;
+import com.openstego.desktop.util.cmd.PasswordInput;
+
+import java.io.File;
+import java.util.List;
+
+/**
+ * This is the main class for OpenStego command line
+ */
+<span class="nc bnc" id="L23" title="All 2 branches missed.">public class OpenStegoCmd {</span>
+    /**
+     * LabelUtil instance to retrieve labels
+     */
+<span class="nc" id="L27">    private static final LabelUtil labelUtil = LabelUtil.getInstance(OpenStego.NAMESPACE);</span>
+
+    /**
+     * Main method for processing command line
+     *
+     * @param args Command line arguments
+     */
+    public static void execute(String[] args) {
+<span class="nc" id="L35">        String command = null;</span>
+        String pluginName;
+<span class="nc" id="L37">        OpenStego stego = null;</span>
+        CmdLineParser parser;
+        CmdLineOptions options;
+        CmdLineOption option;
+        List&lt;CmdLineOption&gt; optionList;
+<span class="nc" id="L42">        OpenStegoPlugin&lt;?&gt; plugin = null;</span>
+
+        try {
+            // First parse of the command-line (without plugin specific options)
+<span class="nc" id="L46">            parser = new CmdLineParser(getStdCmdLineOptions(null), args);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if (!parser.isValid()) {</span>
+<span class="nc" id="L48">                displayUsage();</span>
+<span class="nc" id="L49">                return;</span>
+            }
+
+<span class="nc" id="L52">            pluginName = parser.getParsedOptions().getStringValue(&quot;-a&quot;);</span>
+
+            // Get the plugin object
+<span class="nc bnc" id="L55" title="All 4 branches missed.">            if (pluginName != null &amp;&amp; !pluginName.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L56">                plugin = PluginManager.getPluginByName(pluginName);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                if (plugin == null) {</span>
+<span class="nc" id="L58">                    throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.PLUGIN_NOT_FOUND, pluginName);</span>
+                }
+            }
+            // Try to auto-select plugin
+            else {
+<span class="nc" id="L63">                List&lt;OpenStegoPlugin&lt;?&gt;&gt; plugins = PluginManager.getPlugins();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                if (plugins.size() == 1) {</span>
+<span class="nc" id="L65">                    plugin = plugins.get(0);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                } else if (plugins.size() &gt; 1) {</span>
+<span class="nc" id="L67">                    optionList = parser.getParsedOptionsAsList();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                    if (optionList.size() &gt; 0) {</span>
+<span class="nc" id="L69">                        command = (optionList.get(0)).getName();</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">                        if (command.equals(&quot;embed&quot;) || command.equals(&quot;extract&quot;)) {</span>
+<span class="nc" id="L71">                            plugins = PluginManager.getDataHidingPlugins();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                            if (plugins.size() == 1) {</span>
+<span class="nc" id="L73">                                plugin = plugins.get(0);</span>
+                            }
+<span class="nc bnc" id="L75" title="All 6 branches missed.">                        } else if (command.equals(&quot;gensig&quot;) || command.equals(&quot;embedmark&quot;) || command.equals(&quot;checkmark&quot;)) {</span>
+<span class="nc" id="L76">                            plugins = PluginManager.getWatermarkingPlugins();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                            if (plugins.size() == 1) {</span>
+<span class="nc" id="L78">                                plugin = plugins.get(0);</span>
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Second parse of the command-line (with plugin specific options)
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            if (plugin != null) {</span>
+<span class="nc" id="L87">                parser = new CmdLineParser(getStdCmdLineOptions(plugin), args);</span>
+            }
+
+<span class="nc" id="L90">            optionList = parser.getParsedOptionsAsList();</span>
+<span class="nc" id="L91">            options = parser.getParsedOptions();</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            for (int i = 0; i &lt; optionList.size(); i++) {</span>
+<span class="nc" id="L94">                option = optionList.get(i);</span>
+<span class="nc bnc" id="L95" title="All 8 branches missed.">                if (((i == 0) &amp;&amp; (option.getType() != CmdLineOption.TYPE_COMMAND)) || ((i &gt; 0) &amp;&amp; (option.getType() == CmdLineOption.TYPE_COMMAND))) {</span>
+<span class="nc" id="L96">                    displayUsage();</span>
+<span class="nc" id="L97">                    return;</span>
+                }
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                if (i == 0) {</span>
+<span class="nc" id="L101">                    command = option.getName();</span>
+                }
+            }
+
+            // Non-standard options are not allowed
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (parser.getNonStdOptions().size() &gt; 0) {</span>
+<span class="nc" id="L107">                displayUsage();</span>
+<span class="nc" id="L108">                return;</span>
+            }
+
+            // Check that algorithm is selected
+<span class="nc bnc" id="L112" title="All 4 branches missed.">            assert command != null;</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">            if (!command.equals(&quot;help&quot;) &amp;&amp; !command.equals(&quot;algorithms&quot;)) {</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                if (plugin == null) {</span>
+<span class="nc" id="L115">                    throw new OpenStegoException(null, OpenStego.NAMESPACE, OpenStegoErrors.NO_PLUGIN_SPECIFIED);</span>
+                } else {
+                    // Create main stego object
+<span class="nc" id="L118">                    plugin.resetConfig(parser.getParsedOptions());</span>
+<span class="nc" id="L119">                    stego = new OpenStego(plugin, plugin.getConfig());</span>
+                }
+            }
+
+<span class="nc bnc" id="L123" title="All 9 branches missed.">            switch (command) {</span>
+                case &quot;embed&quot;:
+<span class="nc" id="L125">                    executeEmbed(options, stego);</span>
+<span class="nc" id="L126">                    break;</span>
+                case &quot;embedmark&quot;:
+<span class="nc" id="L128">                    executeEmbedMark(options, stego);</span>
+<span class="nc" id="L129">                    break;</span>
+                case &quot;extract&quot;:
+<span class="nc" id="L131">                    executeExtract(options, stego);</span>
+<span class="nc" id="L132">                    break;</span>
+                case &quot;checkmark&quot;:
+<span class="nc" id="L134">                    executeCheckMark(options, stego);</span>
+<span class="nc" id="L135">                    break;</span>
+                case &quot;gensig&quot;:
+<span class="nc" id="L137">                    executeGenSig(options, stego);</span>
+<span class="nc" id="L138">                    break;</span>
+                case &quot;diff&quot;:
+<span class="nc" id="L140">                    executeDiff(options, stego);</span>
+<span class="nc" id="L141">                    break;</span>
+                    /*
+                case &quot;readformats&quot;: {
+                    List&lt;String&gt; formats = plugin.getReadableFileExtensions();
+                    formats.forEach(System.out::println);
+                    break;
+                }
+                case &quot;writeformats&quot;: {
+                    List&lt;String&gt; formats = plugin.getWritableFileExtensions();
+                    formats.forEach(System.out::println);
+                    break;
+                }
+                */
+                case &quot;algorithms&quot;:
+<span class="nc" id="L155">                    List&lt;OpenStegoPlugin&lt;?&gt;&gt; plugins = PluginManager.getPlugins();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                    for (OpenStegoPlugin&lt;?&gt; osp : plugins) {</span>
+<span class="nc" id="L157">                        System.out.println(osp.getName() + &quot; &quot; + osp.getPurposesLabel() + &quot; - &quot; + osp.getDescription());</span>
+<span class="nc" id="L158">                    }</span>
+<span class="nc" id="L159">                    break;</span>
+                case &quot;help&quot;:
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                    if (plugin == null) {</span>
+<span class="nc" id="L162">                        displayUsage();</span>
+<span class="nc" id="L163">                        return;</span>
+                    } else { // Show plugin-specific help
+<span class="nc" id="L165">                        System.err.println(plugin.getUsage());</span>
+                    }
+<span class="nc" id="L167">                    break;</span>
+                default:
+<span class="nc" id="L169">                    displayUsage();</span>
+            }
+<span class="nc" id="L171">        } catch (OpenStegoException osEx) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (osEx.getErrorCode() == OpenStegoException.UNHANDLED_EXCEPTION) {</span>
+<span class="nc" id="L173">                osEx.printStackTrace();</span>
+            } else {
+<span class="nc" id="L175">                System.err.println(osEx.getMessage());</span>
+            }
+<span class="nc" id="L177">        } catch (Exception ex) {</span>
+<span class="nc" id="L178">            ex.printStackTrace();</span>
+<span class="nc" id="L179">        }</span>
+<span class="nc" id="L180">    }</span>
+
+    /**
+     * Method to execute &quot;embed&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeEmbed(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+<span class="nc" id="L190">        String msgFileName = options.getStringValue(&quot;-mf&quot;);</span>
+<span class="nc" id="L191">        String coverFileName = options.getStringValue(&quot;-cf&quot;);</span>
+<span class="nc" id="L192">        String stegoFileName = options.getStringValue(&quot;-sf&quot;);</span>
+        List&lt;File&gt; coverFileList;
+
+        // Check if we need to prompt for password
+<span class="nc bnc" id="L196" title="All 4 branches missed.">        if (stego.getConfig().isUseEncryption() &amp;&amp; stego.getConfig().getPassword() == null) {</span>
+<span class="nc" id="L197">            stego.getConfig().setPassword(PasswordInput.readPassword(labelUtil.getString(&quot;cmd.msg.enterPassword&quot;) + &quot; &quot;));</span>
+        }
+
+<span class="nc bnc" id="L200" title="All 4 branches missed.">        File msgFile = (msgFileName == null || msgFileName.equals(&quot;-&quot;)) ? null : new File(msgFileName);</span>
+<span class="nc" id="L201">        coverFileList = CommonUtil.parseFileList(coverFileName, &quot;;&quot;);</span>
+        // If no coverfile or only one coverfile is provided then use stegofile name given by the user
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (coverFileList.size() &lt;= 1) {</span>
+<span class="nc bnc" id="L204" title="All 6 branches missed.">            if (coverFileList.size() == 0 &amp;&amp; coverFileName != null &amp;&amp; !coverFileName.equals(&quot;-&quot;)) {</span>
+<span class="nc" id="L205">                System.err.println(labelUtil.getString(&quot;cmd.msg.coverFileNotFound&quot;, coverFileName));</span>
+<span class="nc" id="L206">                return;</span>
+            }
+
+<span class="nc bnc" id="L209" title="All 4 branches missed.">            String stegoFile = (stegoFileName == null || stegoFileName.equals(&quot;-&quot;)) ? null : stegoFileName;</span>
+<span class="nc" id="L210">            CommonUtil.writeFile(</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                    stego.embedData(msgFile, coverFileList.size() == 0 ? null : coverFileList.get(0), stegoFile),</span>
+                    stegoFile);
+<span class="nc" id="L213">        }</span>
+        // Else loop through all coverfiles and overwrite the same coverfiles with generated stegofiles
+        else {
+            // If stego file name is provided, then warn user that it will be ignored
+<span class="nc bnc" id="L217" title="All 4 branches missed.">            if (stegoFileName != null &amp;&amp; !stegoFileName.equals(&quot;-&quot;)) {</span>
+<span class="nc" id="L218">                System.err.println(labelUtil.getString(&quot;cmd.warn.stegoFileIgnored&quot;));</span>
+            }
+
+            // Loop through all cover files
+<span class="nc bnc" id="L222" title="All 2 branches missed.">            for (File file : coverFileList) {</span>
+<span class="nc" id="L223">                coverFileName = file.getName();</span>
+<span class="nc" id="L224">                CommonUtil.writeFile(stego.embedData(msgFile, file, coverFileName), coverFileName);</span>
+<span class="nc" id="L225">                System.err.println(labelUtil.getString(&quot;cmd.msg.coverProcessed&quot;, coverFileName));</span>
+<span class="nc" id="L226">            }</span>
+        }
+<span class="nc" id="L228">    }</span>
+
+    /**
+     * Method to execute &quot;embedmark&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeEmbedMark(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+<span class="nc" id="L238">        String sigFileName = options.getStringValue(&quot;-gf&quot;);</span>
+<span class="nc" id="L239">        String coverFileName = options.getStringValue(&quot;-cf&quot;);</span>
+<span class="nc" id="L240">        String stegoFileName = options.getStringValue(&quot;-sf&quot;);</span>
+
+<span class="nc bnc" id="L242" title="All 4 branches missed.">        File sigFile = (sigFileName == null || sigFileName.equals(&quot;-&quot;)) ? null : new File(sigFileName);</span>
+<span class="nc" id="L243">        List&lt;File&gt; coverFileList = CommonUtil.parseFileList(coverFileName, &quot;;&quot;);</span>
+        // If no coverfile or only one coverfile is provided then use stegofile name given by the user
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (coverFileList.size() &lt;= 1) {</span>
+<span class="nc bnc" id="L246" title="All 6 branches missed.">            if (coverFileList.size() == 0 &amp;&amp; coverFileName != null &amp;&amp; !coverFileName.equals(&quot;-&quot;)) {</span>
+<span class="nc" id="L247">                System.err.println(labelUtil.getString(&quot;cmd.msg.coverFileNotFound&quot;, coverFileName));</span>
+<span class="nc" id="L248">                return;</span>
+            }
+
+<span class="nc bnc" id="L251" title="All 4 branches missed.">            String stegoFile = (stegoFileName == null || stegoFileName.equals(&quot;-&quot;)) ? null : stegoFileName;</span>
+<span class="nc" id="L252">            CommonUtil.writeFile(</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                    stego.embedMark(sigFile, coverFileList.size() == 0 ? null : coverFileList.get(0), stegoFile),</span>
+                    stegoFile);
+<span class="nc" id="L255">        }</span>
+        // Else loop through all coverfiles and overwrite the same coverfiles with generated stegofiles
+        else {
+            // If stego file name is provided, then warn user that it will be ignored
+<span class="nc bnc" id="L259" title="All 4 branches missed.">            if (stegoFileName != null &amp;&amp; !stegoFileName.equals(&quot;-&quot;)) {</span>
+<span class="nc" id="L260">                System.err.println(labelUtil.getString(&quot;cmd.warn.stegoFileIgnored&quot;));</span>
+            }
+
+            // Loop through all cover files
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            for (File file : coverFileList) {</span>
+<span class="nc" id="L265">                coverFileName = file.getName();</span>
+<span class="nc" id="L266">                CommonUtil.writeFile(stego.embedMark(sigFile, file, coverFileName), coverFileName);</span>
+<span class="nc" id="L267">                System.err.println(labelUtil.getString(&quot;cmd.msg.coverProcessed&quot;, coverFileName));</span>
+<span class="nc" id="L268">            }</span>
+        }
+<span class="nc" id="L270">    }</span>
+
+    /**
+     * Method to execute &quot;extract&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeExtract(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+<span class="nc" id="L280">        String stegoFileName = options.getStringValue(&quot;-sf&quot;);</span>
+<span class="nc" id="L281">        String extractDir = options.getStringValue(&quot;-xd&quot;);</span>
+        String extractFileName;
+        List&lt;?&gt; msgData;
+
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        if (stegoFileName == null) {</span>
+<span class="nc" id="L286">            displayUsage();</span>
+<span class="nc" id="L287">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L291">            msgData = stego.extractData(new File(stegoFileName));</span>
+<span class="nc" id="L292">        } catch (OpenStegoException osEx) {</span>
+<span class="nc bnc" id="L293" title="All 4 branches missed.">            if (osEx.getErrorCode() == OpenStegoErrors.INVALID_PASSWORD || osEx.getErrorCode() == OpenStegoErrors.NO_VALID_PLUGIN) {</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">                if (stego.getConfig().getPassword() == null) {</span>
+<span class="nc" id="L295">                    stego.getConfig().setPassword(PasswordInput.readPassword(labelUtil.getString(&quot;cmd.msg.enterPassword&quot;) + &quot; &quot;));</span>
+
+                    try {
+<span class="nc" id="L298">                        msgData = stego.extractData(new File(stegoFileName));</span>
+<span class="nc" id="L299">                    } catch (OpenStegoException inEx) {</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                        if (inEx.getErrorCode() == OpenStegoErrors.INVALID_PASSWORD) {</span>
+<span class="nc" id="L301">                            System.err.println(inEx.getMessage());</span>
+<span class="nc" id="L302">                            return;</span>
+                        } else {
+<span class="nc" id="L304">                            throw inEx;</span>
+                        }
+<span class="nc" id="L306">                    }</span>
+                } else {
+<span class="nc" id="L308">                    System.err.println(osEx.getMessage());</span>
+<span class="nc" id="L309">                    return;</span>
+                }
+            } else {
+<span class="nc" id="L312">                throw osEx;</span>
+            }
+<span class="nc" id="L314">        }</span>
+
+<span class="nc" id="L316">        extractFileName = options.getStringValue(&quot;-xf&quot;);</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if (extractFileName == null) {</span>
+<span class="nc" id="L318">            extractFileName = (String) msgData.get(0);</span>
+<span class="nc bnc" id="L319" title="All 4 branches missed.">            if (extractFileName == null || extractFileName.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L320">                extractFileName = &quot;untitled&quot;;</span>
+            }
+        }
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        if (extractDir != null) {</span>
+<span class="nc" id="L325">            extractFileName = extractDir + File.separator + extractFileName;</span>
+        }
+
+<span class="nc" id="L328">        CommonUtil.writeFile((byte[]) msgData.get(1), extractFileName);</span>
+<span class="nc" id="L329">        System.err.println(labelUtil.getString(&quot;cmd.msg.fileExtracted&quot;, extractFileName));</span>
+<span class="nc" id="L330">    }</span>
+
+    /**
+     * Method to execute &quot;checkmark&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeCheckMark(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+<span class="nc" id="L340">        String stegoFileName = options.getStringValue(&quot;-sf&quot;);</span>
+<span class="nc" id="L341">        String sigFileName = options.getStringValue(&quot;-gf&quot;);</span>
+        List&lt;File&gt; stegoFileList;
+
+<span class="nc bnc" id="L344" title="All 4 branches missed.">        if (stegoFileName == null || sigFileName == null) {</span>
+<span class="nc" id="L345">            displayUsage();</span>
+<span class="nc" id="L346">            return;</span>
+        }
+
+<span class="nc" id="L349">        stegoFileList = CommonUtil.parseFileList(stegoFileName, &quot;;&quot;);</span>
+        // If only one stegofile is provided then use stegofile name given by the user
+<span class="nc bnc" id="L351" title="All 2 branches missed.">        if (stegoFileList.size() == 1) {</span>
+<span class="nc" id="L352">            System.out.println(stego.checkMark(stegoFileList.get(0), new File(sigFileName)));</span>
+        }
+        // Else loop through all stegofiles and calculate correlation value for each
+        else {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">            for (File file : stegoFileList) {</span>
+<span class="nc" id="L357">                stegoFileName = file.getName();</span>
+<span class="nc" id="L358">                System.out.println(stegoFileName + &quot;\t&quot; + stego.checkMark(file, new File(sigFileName)));</span>
+<span class="nc" id="L359">            }</span>
+        }
+<span class="nc" id="L361">    }</span>
+
+    /**
+     * Method to execute &quot;gensig&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeGenSig(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+        // Check if we need to prompt for password
+<span class="nc bnc" id="L372" title="All 2 branches missed.">        if (stego.getConfig().getPassword() == null) {</span>
+<span class="nc" id="L373">            stego.getConfig().setPassword(PasswordInput.readPassword(labelUtil.getString(&quot;cmd.msg.enterPassword&quot;) + &quot; &quot;));</span>
+        }
+
+<span class="nc" id="L376">        String signatureFileName = options.getStringValue(&quot;-gf&quot;);</span>
+<span class="nc bnc" id="L377" title="All 4 branches missed.">        CommonUtil.writeFile(stego.generateSignature(), (signatureFileName == null || signatureFileName.equals(&quot;-&quot;)) ? null : signatureFileName);</span>
+<span class="nc" id="L378">    }</span>
+
+    /**
+     * Method to execute &quot;diff&quot; command
+     *
+     * @param options Command-line options
+     * @param stego   {@link OpenStego} object
+     * @throws OpenStegoException Processing issues
+     */
+    private static void executeDiff(CmdLineOptions options, OpenStego stego) throws OpenStegoException {
+<span class="nc" id="L388">        String coverFileName = options.getStringValue(&quot;-cf&quot;);</span>
+<span class="nc" id="L389">        String stegoFileName = options.getStringValue(&quot;-sf&quot;);</span>
+<span class="nc" id="L390">        String extractDir = options.getStringValue(&quot;-xd&quot;);</span>
+<span class="nc" id="L391">        String extractFileName = options.getStringValue(&quot;-xf&quot;);</span>
+
+<span class="nc bnc" id="L393" title="All 2 branches missed.">        if (extractDir != null) {</span>
+<span class="nc" id="L394">            extractFileName = extractDir + File.separator + extractFileName;</span>
+        }
+
+<span class="nc" id="L397">        CommonUtil.writeFile(stego.getDiff(new File(stegoFileName), new File(coverFileName), extractFileName), extractFileName);</span>
+<span class="nc" id="L398">    }</span>
+
+    /**
+     * Method to display usage for OpenStego
+     *
+     * @throws OpenStegoException Processing issues
+     */
+    private static void displayUsage() throws OpenStegoException {
+<span class="nc" id="L406">        PluginManager.loadPlugins();</span>
+
+<span class="nc" id="L408">        System.err.print(labelUtil.getString(&quot;appName&quot;) + &quot; &quot; + labelUtil.getString(&quot;appVersion&quot;) + &quot;. &quot;);</span>
+<span class="nc" id="L409">        System.err.println(labelUtil.getString(&quot;copyright&quot;) + &quot;\n&quot;);</span>
+<span class="nc" id="L410">        System.err.println(labelUtil.getString(&quot;cmd.usage&quot;, File.separator));</span>
+<span class="nc" id="L411">    }</span>
+
+    /**
+     * Method to generate the standard list of command-line options
+     *
+     * @param plugin Stego plugin for plugin-specific command-line options
+     * @return Standard list of command-line options
+     * @throws OpenStegoException Processing issues
+     */
+    private static CmdLineOptions getStdCmdLineOptions(OpenStegoPlugin&lt;?&gt; plugin) throws OpenStegoException {
+<span class="nc" id="L421">        CmdLineOptions options = new CmdLineOptions();</span>
+
+        // Commands
+<span class="nc" id="L424">        options.add(&quot;embed&quot;, &quot;--embed&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L425">        options.add(&quot;extract&quot;, &quot;--extract&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L426">        options.add(&quot;gensig&quot;, &quot;--gensig&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L427">        options.add(&quot;embedmark&quot;, &quot;--embedmark&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L428">        options.add(&quot;checkmark&quot;, &quot;--checkmark&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L429">        options.add(&quot;diff&quot;, &quot;--diff&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L430">        options.add(&quot;readformats&quot;, &quot;--readformats&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L431">        options.add(&quot;writeformats&quot;, &quot;--writeformats&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L432">        options.add(&quot;algorithms&quot;, &quot;--algorithms&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+<span class="nc" id="L433">        options.add(&quot;help&quot;, &quot;--help&quot;, CmdLineOption.TYPE_COMMAND, false);</span>
+
+        // Plugin options
+<span class="nc" id="L436">        options.add(&quot;-a&quot;, &quot;--algorithm&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+
+        // File options
+<span class="nc" id="L439">        options.add(&quot;-mf&quot;, &quot;--messagefile&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L440">        options.add(&quot;-cf&quot;, &quot;--coverfile&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L441">        options.add(&quot;-sf&quot;, &quot;--stegofile&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L442">        options.add(&quot;-xf&quot;, &quot;--extractfile&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L443">        options.add(&quot;-xd&quot;, &quot;--extractdir&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L444">        options.add(&quot;-gf&quot;, &quot;--sigfile&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+
+        // Command options
+<span class="nc" id="L447">        options.add(&quot;-c&quot;, &quot;--compress&quot;, CmdLineOption.TYPE_OPTION, false);</span>
+<span class="nc" id="L448">        options.add(&quot;-C&quot;, &quot;--nocompress&quot;, CmdLineOption.TYPE_OPTION, false);</span>
+<span class="nc" id="L449">        options.add(&quot;-e&quot;, &quot;--encrypt&quot;, CmdLineOption.TYPE_OPTION, false);</span>
+<span class="nc" id="L450">        options.add(&quot;-E&quot;, &quot;--noencrypt&quot;, CmdLineOption.TYPE_OPTION, false);</span>
+<span class="nc" id="L451">        options.add(&quot;-p&quot;, &quot;--password&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+<span class="nc" id="L452">        options.add(&quot;-A&quot;, &quot;--cryptalgo&quot;, CmdLineOption.TYPE_OPTION, true);</span>
+
+        // Plugin-specific options
+<span class="nc bnc" id="L455" title="All 2 branches missed.">        if (plugin != null) {</span>
+<span class="nc" id="L456">            plugin.populateStdCmdLineOptions(options);</span>
+        }
+
+<span class="nc" id="L459">        return options;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
